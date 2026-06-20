@@ -1,84 +1,90 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 
 namespace ServerApp
 {
-    class Server
+    public class Server
     {
-        private TcpListener listener;
-        private bool isRunning = false;
+        private TcpListener _listener;
+        private bool _isRunning;
+        private List<ClientHandler> _clients = new List<ClientHandler>();
 
-        public Action<string> OnMessageReceived;
+        // Các sự kiện đồng bộ dữ liệu ra Giao diện Form1
+        public event Action<string> OnLogReceived;
+        public event Action<int> OnProgressUpdated;
 
-        public void StartServer(int port)
+        public void Start(int port)
         {
-            listener = new TcpListener(IPAddress.Any, port);
-            listener.Start();
+            try
+            {
+                _listener = new TcpListener(IPAddress.Any, port);
+                _listener.Start();
+                _isRunning = true;
+                OnLogReceived?.Invoke($"Server đã khởi động thành công trên cổng {port}...");
 
-            isRunning = true;
-
-            Thread thread = new Thread(ListenClients);
-            thread.IsBackground = true;
-            thread.Start();
-
-            OnMessageReceived?.Invoke("Server đã khởi động...");
+                Thread listenThread = new Thread(ListenForClients);
+                listenThread.IsBackground = true;
+                listenThread.Start();
+            }
+            catch (Exception ex)
+            {
+                OnLogReceived?.Invoke($"Lỗi khi khởi động Server: {ex.Message}");
+            }
         }
 
-        private void ListenClients()
+        private void ListenForClients()
         {
-            while (isRunning)
+            while (_isRunning)
             {
                 try
                 {
-                    TcpClient client = listener.AcceptTcpClient();
+                    TcpClient client = _listener.AcceptTcpClient();
+                    OnLogReceived?.Invoke($"Client kết nối thành công từ địa chỉ: {client.Client.RemoteEndPoint}");
 
-                    OnMessageReceived?.Invoke("Client đã kết nối.");
+                    ClientHandler handler = new ClientHandler(client, this);
+                    lock (_clients)
+                    {
+                        _clients.Add(handler);
+                    }
 
-                    Thread clientThread =
-                        new Thread(() => HandleClient(client));
-
+                    Thread clientThread = new Thread(handler.Process);
                     clientThread.IsBackground = true;
                     clientThread.Start();
                 }
                 catch
                 {
-                    break;
+                    break; // Vòng lặp dừng lại khi Server.Stop() được gọi
                 }
             }
         }
 
-        private void HandleClient(TcpClient client)
+        // Đẩy tiến trình phần trăm file nhận được từ ClientHandler ra Form1
+        public void UpdateProgress(int percentage)
         {
-            NetworkStream stream = client.GetStream();
+            OnProgressUpdated?.Invoke(percentage);
+        }
 
-            byte[] buffer = new byte[4096];
-
-            while (true)
+        public void RemoveClient(ClientHandler handler)
+        {
+            lock (_clients)
             {
-                try
-                {
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-                    if (bytesRead == 0)
-                        break;
-
-                    string message =
-                        Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-                    OnMessageReceived?.Invoke(message);
-                }
-                catch
-                {
-                    break;
-                }
+                _clients.Remove(handler);
             }
+            OnLogReceived?.Invoke("Một Client đã ngắt kết nối khỏi hệ thống.");
+        }
 
-            client.Close();
-
-            OnMessageReceived?.Invoke("Client đã ngắt kết nối.");
+        public void Stop()
+        {
+            _isRunning = false;
+            _listener?.Stop();
+            lock (_clients)
+            {
+                foreach (var client in _clients) client.Close();
+                _clients.Clear();
+            }
         }
     }
 }
