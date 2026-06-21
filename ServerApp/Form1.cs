@@ -23,8 +23,8 @@ namespace ServerApp
             if (int.TryParse(txtPort.Text, out int port))
             {
                 _server.Start(port);
-                btnStartServer.Enabled = false;
-                btnStopServer.Enabled = true;
+                btnKhoiDongServer.Enabled = false;
+                btnDungServer.Enabled = true;
                 txtPort.Enabled = false;
             }
             else
@@ -38,8 +38,8 @@ namespace ServerApp
         {
             _server.Stop();
             UpdateLog("Server đã dừng hoạt động.");
-            btnStartServer.Enabled = true;
-            btnStopServer.Enabled = false;
+            btnKhoiDongServer.Enabled = true;
+            btnDungServer.Enabled = false;
             txtPort.Enabled = true;
         }
 
@@ -84,6 +84,31 @@ namespace ServerApp
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             _server?.Stop();
+        }
+
+        private void lstClients_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnStartServer_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void prgUploadProgress_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtMessageInput_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
