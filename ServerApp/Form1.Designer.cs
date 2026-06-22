@@ -45,7 +45,7 @@
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.lblStatusDetails = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dgvFiles = new System.Windows.Forms.DataGridView();
             this.colTenFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colKichThuoc = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colThoiGianNhan = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -56,7 +56,7 @@
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvFiles)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -87,7 +87,7 @@
             // 
             this.btnDungServer.Location = new System.Drawing.Point(293, 143);
             this.btnDungServer.Name = "btnDungServer";
-            this.btnDungServer.Size = new System.Drawing.Size(95, 41);
+            this.btnDungServer.Size = new System.Drawing.Size(109, 41);
             this.btnDungServer.TabIndex = 2;
             this.btnDungServer.Text = "Dừng";
             this.btnDungServer.UseVisualStyleBackColor = true;
@@ -96,11 +96,10 @@
             // 
             this.btnKhoiDongServer.Location = new System.Drawing.Point(76, 138);
             this.btnKhoiDongServer.Name = "btnKhoiDongServer";
-            this.btnKhoiDongServer.Size = new System.Drawing.Size(95, 46);
+            this.btnKhoiDongServer.Size = new System.Drawing.Size(108, 46);
             this.btnKhoiDongServer.TabIndex = 1;
             this.btnKhoiDongServer.Text = "Khởi động";
             this.btnKhoiDongServer.UseVisualStyleBackColor = true;
-            //this.btnKhoiDongServer.Click += new System.EventHandler(this.btnKhoiDongServer_Click_1);
             // 
             // txtPort
             // 
@@ -132,7 +131,6 @@
             this.label3.Size = new System.Drawing.Size(142, 20);
             this.label3.TabIndex = 6;
             this.label3.Text = "Nhật ký hoạt động:";
-            //this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // label2
             // 
@@ -161,7 +159,6 @@
             this.lstClients.Name = "lstClients";
             this.lstClients.Size = new System.Drawing.Size(232, 264);
             this.lstClients.TabIndex = 3;
-            //this.lstClients.SelectedIndexChanged += new System.EventHandler(this.lstClients_SelectedIndexChanged);
             // 
             // groupBox3
             // 
@@ -192,7 +189,6 @@
             this.txtMessageInput.Name = "txtMessageInput";
             this.txtMessageInput.Size = new System.Drawing.Size(922, 26);
             this.txtMessageInput.TabIndex = 6;
-            //this.txtMessageInput.TextChanged += new System.EventHandler(this.txtMessageInput_TextChanged);
             // 
             // txtChatHistory
             // 
@@ -209,7 +205,7 @@
             // 
             this.groupBox4.Controls.Add(this.lblStatusDetails);
             this.groupBox4.Controls.Add(this.label4);
-            this.groupBox4.Controls.Add(this.dataGridView1);
+            this.groupBox4.Controls.Add(this.dgvFiles);
             this.groupBox4.Controls.Add(this.prgUploadProgress);
             this.groupBox4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox4.Location = new System.Drawing.Point(835, 350);
@@ -227,7 +223,6 @@
             this.lblStatusDetails.Size = new System.Drawing.Size(230, 20);
             this.lblStatusDetails.TabIndex = 11;
             this.lblStatusDetails.Text = "Tốc độ: 0 KB/s | Đã nhận: 0 MB";
-            //this.lblStatusDetails.Click += new System.EventHandler(this.lblStatusDetails_Click);
             // 
             // label4
             // 
@@ -238,20 +233,20 @@
             this.label4.TabIndex = 10;
             this.label4.Text = "Tiến độ tải file:";
             // 
-            // dataGridView1
+            // dgvFiles
             // 
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dgvFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvFiles.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colTenFile,
             this.colKichThuoc,
             this.colThoiGianNhan,
             this.colTrangThai});
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.dataGridView1.Location = new System.Drawing.Point(3, 22);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowHeadersWidth = 62;
-            this.dataGridView1.Size = new System.Drawing.Size(922, 195);
-            this.dataGridView1.TabIndex = 9;
+            this.dgvFiles.Dock = System.Windows.Forms.DockStyle.Top;
+            this.dgvFiles.Location = new System.Drawing.Point(3, 22);
+            this.dgvFiles.Name = "dgvFiles";
+            this.dgvFiles.RowHeadersWidth = 62;
+            this.dgvFiles.Size = new System.Drawing.Size(922, 195);
+            this.dgvFiles.TabIndex = 9;
             // 
             // colTenFile
             // 
@@ -287,7 +282,6 @@
             this.prgUploadProgress.Name = "prgUploadProgress";
             this.prgUploadProgress.Size = new System.Drawing.Size(315, 23);
             this.prgUploadProgress.TabIndex = 8;
-            //this.prgUploadProgress.Click += new System.EventHandler(this.prgUploadProgress_Click);
             // 
             // tableLayoutPanel1
             // 
@@ -323,7 +317,7 @@
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvFiles)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -344,7 +338,7 @@
         private System.Windows.Forms.Button btnSendMessage;
         private System.Windows.Forms.TextBox txtMessageInput;
         private System.Windows.Forms.TextBox txtChatHistory;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView dgvFiles;
         private System.Windows.Forms.ProgressBar prgUploadProgress;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
