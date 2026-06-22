@@ -12,9 +12,13 @@ namespace ServerApp
         private bool _isRunning;
         private List<ClientHandler> _clients = new List<ClientHandler>();
 
-        // Các sự kiện đồng bộ dữ liệu ra Giao diện Form1
+        // Định nghĩa các sự kiện ủy quyền (Delegates) để gửi thông báo ra Form UI
         public event Action<string> OnLogReceived;
+        public event Action<string> OnClientConnected;
+        public event Action<string> OnClientDisconnected;
+        public event Action<string> OnMessageReceived;
         public event Action<int> OnProgressUpdated;
+        public event Action<string, string, string> OnFileReceived;
 
         public void Start(int port)
         {
@@ -23,7 +27,7 @@ namespace ServerApp
                 _listener = new TcpListener(IPAddress.Any, port);
                 _listener.Start();
                 _isRunning = true;
-                OnLogReceived?.Invoke($"Server đã khởi động thành công trên cổng {port}...");
+                OnLogReceived?.Invoke($"Máy chủ bắt đầu lắng nghe trên cổng {port}...");
 
                 Thread listenThread = new Thread(ListenForClients);
                 listenThread.IsBackground = true;
@@ -31,7 +35,7 @@ namespace ServerApp
             }
             catch (Exception ex)
             {
-                OnLogReceived?.Invoke($"Lỗi khi khởi động Server: {ex.Message}");
+                OnLogReceived?.Invoke($"Lỗi khi khởi động cổng Socket: {ex.Message}");
             }
         }
 
@@ -42,7 +46,10 @@ namespace ServerApp
                 try
                 {
                     TcpClient client = _listener.AcceptTcpClient();
-                    OnLogReceived?.Invoke($"Client kết nối thành công từ địa chỉ: {client.Client.RemoteEndPoint}");
+                    string ep = client.Client.RemoteEndPoint.ToString();
+
+                    OnLogReceived?.Invoke($"Client kết nối thành công: {ep}");
+                    OnClientConnected?.Invoke(ep);
 
                     ClientHandler handler = new ClientHandler(client, this);
                     lock (_clients)
@@ -56,24 +63,34 @@ namespace ServerApp
                 }
                 catch
                 {
-                    break; // Vòng lặp dừng lại khi Server.Stop() được gọi
+                    break;
                 }
             }
         }
 
-        // Đẩy tiến trình phần trăm file nhận được từ ClientHandler ra Form1
-        public void UpdateProgress(int percentage)
+        public void BroadcastMessage(string message)
         {
-            OnProgressUpdated?.Invoke(percentage);
+            lock (_clients)
+            {
+                foreach (var client in _clients)
+                {
+                    client.SendMessage(message);
+                }
+            }
         }
 
-        public void RemoveClient(ClientHandler handler)
+        public void InvokeMessageReceived(string msg) => OnMessageReceived?.Invoke(msg);
+        public void InvokeProgressUpdated(int percent) => OnProgressUpdated?.Invoke(percent);
+        public void InvokeFileReceived(string name, string size, string status) => OnFileReceived?.Invoke(name, size, status);
+
+        public void RemoveClient(ClientHandler handler, string endPoint)
         {
             lock (_clients)
             {
                 _clients.Remove(handler);
             }
-            OnLogReceived?.Invoke("Một Client đã ngắt kết nối khỏi hệ thống.");
+            OnClientDisconnected?.Invoke(endPoint);
+            OnLogReceived?.Invoke($"Client {endPoint} đã ngắt kết nối.");
         }
 
         public void Stop()

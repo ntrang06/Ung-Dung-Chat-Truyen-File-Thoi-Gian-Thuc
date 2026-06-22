@@ -12,13 +12,17 @@ namespace ServerApp
             InitializeComponent();
             _server = new Server();
 
-            // Đăng ký sự kiện nhận Log và Tiến trình truyền tải từ Socket để đẩy lên UI
+            // Đăng ký nhận sự kiện từ lõi Socket gửi ra ngoài giao diện UI
             _server.OnLogReceived += UpdateLog;
+            _server.OnClientConnected += AddClientToUI;
+            _server.OnClientDisconnected += RemoveClientFromUI;
+            _server.OnMessageReceived += UpdateChatHistory;
             _server.OnProgressUpdated += UpdateProgressBar;
+            _server.OnFileReceived += AddFileToGrid;
         }
 
-        // Sự kiện khi nhấn nút "Khởi động Server"
-        private void btnStartServer_Click(object sender, EventArgs e)
+        // Sự kiện bấm nút Khởi động Server
+        private void btnKhoiDongServer_Click(object sender, EventArgs e)
         {
             if (int.TryParse(txtPort.Text, out int port))
             {
@@ -29,21 +33,35 @@ namespace ServerApp
             }
             else
             {
-                MessageBox.Show("Vui lòng nhập cổng (Port) hợp lệ!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Vui lòng nhập số Cổng (Port) hợp lệ!", "Lỗi cấu hình", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        // Sự kiện khi nhấn nút "Dừng Server"
-        private void btnStopServer_Click(object sender, EventArgs e)
+        // Sự kiện bấm nút Dừng Server
+        private void btnDungServer_Click(object sender, EventArgs e)
         {
             _server.Stop();
-            UpdateLog("Server đã dừng hoạt động.");
+            UpdateLog("Hệ thống Server đã dừng hoạt động hoàn toàn.");
             btnKhoiDongServer.Enabled = true;
             btnDungServer.Enabled = false;
             txtPort.Enabled = true;
         }
 
-        // Hàm cập nhật Nhật ký hệ thống (Log) an toàn từ luồng phụ (Thread-Safe)
+        // Sự kiện bấm nút Gửi tin nhắn từ Server cho Client
+        private void btnSendMessage_Click(object sender, EventArgs e)
+        {
+            string msg = txtMessageInput.Text.Trim();
+            if (!string.IsNullOrEmpty(msg))
+            {
+                // Gửi tin nhắn dạng quảng bá (Broadcast) cho tất cả các Client đang kết nối
+                _server.BroadcastMessage(msg);
+                UpdateChatHistory($"[Server]: {msg}");
+                txtMessageInput.Clear();
+            }
+        }
+
+        // --- CÁC HÀM CẬP NHẬT GIAO DIỆN ĐẢM BẢO AN TOÀN ĐA LUỒNG (THREAD-SAFE UI) ---
+
         private void UpdateLog(string message)
         {
             if (txtLog.InvokeRequired)
@@ -56,7 +74,42 @@ namespace ServerApp
             }
         }
 
-        // Hàm cập nhật Thanh tiến trình nhận file (% ProgressBar) an toàn từ luồng phụ
+        private void AddClientToUI(string clientEndPoint)
+        {
+            if (lstClients.InvokeRequired)
+            {
+                lstClients.Invoke(new Action(() => AddClientToUI(clientEndPoint)));
+            }
+            else
+            {
+                lstClients.Items.Add(clientEndPoint);
+            }
+        }
+
+        private void RemoveClientFromUI(string clientEndPoint)
+        {
+            if (lstClients.InvokeRequired)
+            {
+                lstClients.Invoke(new Action(() => RemoveClientFromUI(clientEndPoint)));
+            }
+            else
+            {
+                lstClients.Items.Remove(clientEndPoint);
+            }
+        }
+
+        private void UpdateChatHistory(string message)
+        {
+            if (txtChatHistory.InvokeRequired)
+            {
+                txtChatHistory.Invoke(new Action(() => UpdateChatHistory(message)));
+            }
+            else
+            {
+                txtChatHistory.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
+            }
+        }
+
         private void UpdateProgressBar(int percentage)
         {
             if (prgUploadProgress.InvokeRequired)
@@ -65,50 +118,28 @@ namespace ServerApp
             }
             else
             {
-                // Giới hạn giá trị trong khoảng 0 - 100
                 prgUploadProgress.Value = Math.Max(0, Math.Min(100, percentage));
-
-                // Nếu đạt 100% thì thông báo hoặc đặt lại trạng thái nếu cần
-                if (percentage >= 100)
-                {
-                    lblStatusDetails.Text = "Trạng thái: Đã nhận file thành công!";
-                }
-                else
-                {
-                    lblStatusDetails.Text = $"Đang tiến hành tải: {percentage}%";
-                }
+                lblStatusDetails.Text = $"Đang tiến hành tải dữ liệu: {percentage}%";
             }
         }
 
-        // Khi tắt Form, đảm bảo giải phóng và đóng tất cả các kết nối Socket đang chạy ngầm
+        private void AddFileToGrid(string fileName, string fileSize, string status)
+        {
+            if (dgvFiles.InvokeRequired)
+            {
+                dgvFiles.Invoke(new Action(() => AddFileToGrid(fileName, fileSize, status)));
+            }
+            else
+            {
+                string timeString = DateTime.Now.ToString("HH:mm:ss");
+                dgvFiles.Rows.Add(fileName, fileSize, timeString, status);
+                lblStatusDetails.Text = $"Trạng thái: Đã nhận xong file {fileName}";
+            }
+        }
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             _server?.Stop();
-        }
-
-        private void lstClients_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void btnStartServer_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void prgUploadProgress_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void txtMessageInput_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label3_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }

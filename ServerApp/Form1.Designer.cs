@@ -34,6 +34,7 @@
             this.btnKhoiDongServer = new System.Windows.Forms.Button();
             this.txtPort = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.txtLog = new System.Windows.Forms.TextBox();
             this.lstClients = new System.Windows.Forms.ListBox();
@@ -42,16 +43,15 @@
             this.txtMessageInput = new System.Windows.Forms.TextBox();
             this.txtChatHistory = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.prgUploadProgress = new System.Windows.Forms.ProgressBar();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.lblStatusDetails = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colTenFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colKichThuoc = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colThoiGianNhan = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTrangThai = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.prgUploadProgress = new System.Windows.Forms.ProgressBar();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -69,7 +69,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(826, 342);
+            this.groupBox1.Size = new System.Drawing.Size(826, 341);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Cấu hình Hệ thống";
@@ -100,7 +100,7 @@
             this.btnKhoiDongServer.TabIndex = 1;
             this.btnKhoiDongServer.Text = "Khởi động";
             this.btnKhoiDongServer.UseVisualStyleBackColor = true;
-            this.btnKhoiDongServer.Click += new System.EventHandler(this.btnStartServer_Click_1);
+            //this.btnKhoiDongServer.Click += new System.EventHandler(this.btnKhoiDongServer_Click_1);
             // 
             // txtPort
             // 
@@ -117,12 +117,22 @@
             this.groupBox2.Controls.Add(this.txtLog);
             this.groupBox2.Controls.Add(this.lstClients);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox2.Location = new System.Drawing.Point(3, 351);
+            this.groupBox2.Location = new System.Drawing.Point(3, 350);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(826, 451);
+            this.groupBox2.Size = new System.Drawing.Size(826, 452);
             this.groupBox2.TabIndex = 0;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Giám sát Client";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(388, 59);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(142, 20);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Nhật ký hoạt động:";
+            //this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // label2
             // 
@@ -151,7 +161,7 @@
             this.lstClients.Name = "lstClients";
             this.lstClients.Size = new System.Drawing.Size(232, 264);
             this.lstClients.TabIndex = 3;
-            this.lstClients.SelectedIndexChanged += new System.EventHandler(this.lstClients_SelectedIndexChanged);
+            //this.lstClients.SelectedIndexChanged += new System.EventHandler(this.lstClients_SelectedIndexChanged);
             // 
             // groupBox3
             // 
@@ -161,7 +171,7 @@
             this.groupBox3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox3.Location = new System.Drawing.Point(835, 3);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(928, 342);
+            this.groupBox3.Size = new System.Drawing.Size(928, 341);
             this.groupBox3.TabIndex = 0;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Khung Chat Hệ thống";
@@ -169,7 +179,7 @@
             // btnSendMessage
             // 
             this.btnSendMessage.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.btnSendMessage.Location = new System.Drawing.Point(3, 289);
+            this.btnSendMessage.Location = new System.Drawing.Point(3, 288);
             this.btnSendMessage.Name = "btnSendMessage";
             this.btnSendMessage.Size = new System.Drawing.Size(922, 50);
             this.btnSendMessage.TabIndex = 7;
@@ -182,7 +192,7 @@
             this.txtMessageInput.Name = "txtMessageInput";
             this.txtMessageInput.Size = new System.Drawing.Size(922, 26);
             this.txtMessageInput.TabIndex = 6;
-            this.txtMessageInput.TextChanged += new System.EventHandler(this.txtMessageInput_TextChanged);
+            //this.txtMessageInput.TextChanged += new System.EventHandler(this.txtMessageInput_TextChanged);
             // 
             // txtChatHistory
             // 
@@ -202,12 +212,31 @@
             this.groupBox4.Controls.Add(this.dataGridView1);
             this.groupBox4.Controls.Add(this.prgUploadProgress);
             this.groupBox4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox4.Location = new System.Drawing.Point(835, 351);
+            this.groupBox4.Location = new System.Drawing.Point(835, 350);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(928, 451);
+            this.groupBox4.Size = new System.Drawing.Size(928, 452);
             this.groupBox4.TabIndex = 0;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Quản lý File";
+            // 
+            // lblStatusDetails
+            // 
+            this.lblStatusDetails.AutoSize = true;
+            this.lblStatusDetails.Location = new System.Drawing.Point(362, 298);
+            this.lblStatusDetails.Name = "lblStatusDetails";
+            this.lblStatusDetails.Size = new System.Drawing.Size(230, 20);
+            this.lblStatusDetails.TabIndex = 11;
+            this.lblStatusDetails.Text = "Tốc độ: 0 KB/s | Đã nhận: 0 MB";
+            //this.lblStatusDetails.Click += new System.EventHandler(this.lblStatusDetails_Click);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(172, 264);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(110, 20);
+            this.label4.TabIndex = 10;
+            this.label4.Text = "Tiến độ tải file:";
             // 
             // dataGridView1
             // 
@@ -223,60 +252,6 @@
             this.dataGridView1.RowHeadersWidth = 62;
             this.dataGridView1.Size = new System.Drawing.Size(922, 195);
             this.dataGridView1.TabIndex = 9;
-            // 
-            // prgUploadProgress
-            // 
-            this.prgUploadProgress.Location = new System.Drawing.Point(224, 280);
-            this.prgUploadProgress.Name = "prgUploadProgress";
-            this.prgUploadProgress.Size = new System.Drawing.Size(315, 23);
-            this.prgUploadProgress.TabIndex = 8;
-            this.prgUploadProgress.Click += new System.EventHandler(this.prgUploadProgress_Click);
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 47.14785F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 52.85215F));
-            this.tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.groupBox4, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.groupBox2, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.groupBox3, 1, 0);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 43.22981F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 56.77019F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1766, 805);
-            this.tableLayoutPanel1.TabIndex = 1;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(388, 59);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(142, 20);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "Nhật ký hoạt động:";
-            this.label3.Click += new System.EventHandler(this.label3_Click);
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(88, 283);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(110, 20);
-            this.label4.TabIndex = 10;
-            this.label4.Text = "Tiến độ tải file:";
-            // 
-            // lblStatusDetails
-            // 
-            this.lblStatusDetails.AutoSize = true;
-            this.lblStatusDetails.Location = new System.Drawing.Point(248, 321);
-            this.lblStatusDetails.Name = "lblStatusDetails";
-            this.lblStatusDetails.Size = new System.Drawing.Size(230, 20);
-            this.lblStatusDetails.TabIndex = 11;
-            this.lblStatusDetails.Text = "Tốc độ: 0 KB/s | Đã nhận: 0 MB";
             // 
             // colTenFile
             // 
@@ -305,6 +280,32 @@
             this.colTrangThai.MinimumWidth = 8;
             this.colTrangThai.Name = "colTrangThai";
             this.colTrangThai.Width = 150;
+            // 
+            // prgUploadProgress
+            // 
+            this.prgUploadProgress.Location = new System.Drawing.Point(319, 261);
+            this.prgUploadProgress.Name = "prgUploadProgress";
+            this.prgUploadProgress.Size = new System.Drawing.Size(315, 23);
+            this.prgUploadProgress.TabIndex = 8;
+            //this.prgUploadProgress.Click += new System.EventHandler(this.prgUploadProgress_Click);
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 47.14785F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 52.85215F));
+            this.tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.groupBox4, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.groupBox2, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.groupBox3, 1, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 43.22981F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 56.77019F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1766, 805);
+            this.tableLayoutPanel1.TabIndex = 1;
             // 
             // Form1
             // 

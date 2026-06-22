@@ -11,6 +11,7 @@ namespace ServerApp
         private Server _server;
         private NetworkStream _stream;
         private bool _isConnected;
+        private string _endPoint;
 
         public ClientHandler(TcpClient client, Server server)
         {
@@ -18,6 +19,7 @@ namespace ServerApp
             _server = server;
             _stream = client.GetStream();
             _isConnected = true;
+            _endPoint = client.Client.RemoteEndPoint.ToString();
         }
 
         public void Process()
@@ -28,22 +30,21 @@ namespace ServerApp
             {
                 try
                 {
-                    // Đọc 1 byte đầu tiên để nhận dạng gói dữ liệu (Mã lệnh protocol)
                     int bytesRead = _stream.Read(commandByte, 0, 1);
                     if (bytesRead == 0) break;
 
                     byte cmd = commandByte[0];
 
-                    if (cmd == 0x01) // 0x01 đại diện cho gói tin nhắn Chat
+                    if (cmd == 0x01) // Nhận tin nhắn chat từ client
                     {
                         HandleChat();
                     }
-                    else if (cmd == 0x02) // 0x02 đại diện cho gói chuẩn bị truyền dữ liệu File
+                    else if (cmd == 0x02) // Chuẩn bị nhận file từ client
                     {
                         HandleReceiveFile();
                     }
                 }
-                catch (Exception)
+                catch
                 {
                     break;
                 }
@@ -66,15 +67,12 @@ namespace ServerApp
             }
 
             string message = Encoding.UTF8.GetString(messageBuffer);
-            _server.UpdateProgress(0); // Reset progress bar về 0 khi chat
-            // In tin nhắn ra Log hệ thống của Form1
-            _server.Stop(); // Có thể đổi thành hàm in log tùy ý:
-            // _server.InvokeLog($"[Chat] Client: {message}");
+            _server.InvokeMessageReceived($"[Client {_endPoint}]: {message}");
         }
 
         private void HandleReceiveFile()
         {
-            // 1. Đọc độ dài tên file và nội dung tên file
+            // 1. Nhận thông tin tên file
             byte[] lengthBuffer = new byte[4];
             _stream.Read(lengthBuffer, 0, 4);
             int nameLength = BitConverter.ToInt32(lengthBuffer, 0);
@@ -83,34 +81,57 @@ namespace ServerApp
             _stream.Read(nameBuffer, 0, nameLength);
             string fileName = Encoding.UTF8.GetString(nameBuffer);
 
-            // 2. Đọc dung lượng tổng của file (8 bytes)
+            // 2. Nhận dung lượng file
             byte[] sizeBuffer = new byte[8];
             _stream.Read(sizeBuffer, 0, 8);
             long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
 
-            // 3. Tiến hành ghi file vào ổ đĩa thông qua cơ chế Buffer 8KB từng khối dữ liệu liên tiếp
+            // Tải file xuống ổ đĩa bằng Khối đệm chia nhỏ dữ liệu ổn định
             string savePath = Path.Combine(FileManager.GetStoragePath(), fileName);
+            string readableSize = (fileSize / 1024.0 / 1024.0).ToString("0.##") + " MB";
 
-            using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write))
+            try
             {
-                byte[] buffer = new byte[8192];
-                long totalBytesReceived = 0;
-
-                while (totalBytesReceived < fileSize)
+                using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write))
                 {
-                    int bytesToRead = (int)Math.Min(buffer.Length, fileSize - totalBytesReceived);
-                    int read = _stream.Read(buffer, 0, bytesToRead);
+                    byte[] buffer = new byte[8192]; // Buffer khối dữ liệu nhỏ tối ưu 8KB
+                    long totalBytesReceived = 0;
 
-                    if (read == 0) throw new Exception("Kết nối bị gián đoạn giữa chừng.");
+                    while (totalBytesReceived < fileSize)
+                    {
+                        int bytesToRead = (int)Math.Min(buffer.Length, fileSize - totalBytesReceived);
+                        int read = _stream.Read(buffer, 0, bytesToRead);
 
-                    fs.Write(buffer, 0, read);
-                    totalBytesReceived += read;
+                        if (read == 0) throw new Exception("Ngắt kết nối đột ngột.");
 
-                    // Tính toán phần trăm và gửi ra giao diện hiển thị ProgressBar
-                    int progress = (int)((totalBytesReceived * 100) / fileSize);
-                    _server.UpdateProgress(progress);
+                        fs.Write(buffer, 0, read);
+                        totalBytesReceived += read;
+
+                        int progress = (int)((totalBytesReceived * 100) / fileSize);
+                        _server.InvokeProgressUpdated(progress);
+                    }
                 }
+                _server.InvokeFileReceived(fileName, readableSize, "Thành công");
             }
+            catch
+            {
+                _server.InvokeFileReceived(fileName, readableSize, "Thất bại/Lỗi");
+            }
+        }
+
+        public void SendMessage(string message)
+        {
+            try
+            {
+                byte[] messageBytes = Encoding.UTF8.GetBytes(message);
+                byte[] lengthBytes = BitConverter.GetBytes(messageBytes.Length);
+
+                _stream.WriteByte(0x01); // Thêm byte điều khiển chat protocol
+                _stream.Write(lengthBytes, 0, 4);
+                _stream.Write(messageBytes, 0, messageBytes.Length);
+                _stream.Flush();
+            }
+            catch { }
         }
 
         public void Close()
@@ -120,7 +141,7 @@ namespace ServerApp
                 _isConnected = false;
                 _stream?.Close();
                 _client?.Close();
-                _server.RemoveClient(this);
+                _server.RemoveClient(this, _endPoint);
             }
         }
     }
