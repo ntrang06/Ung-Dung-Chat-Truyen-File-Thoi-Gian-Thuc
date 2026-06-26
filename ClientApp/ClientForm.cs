@@ -1,186 +1,65 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Net.Sockets;
-using System.IO; // <-- Thêm thư viện này để đọc/ghi File
+using System.Text;
+using System.Windows.Forms;
 
 namespace ClientApp
 {
-    // Giữ nguyên tên lớp là lstChat theo đúng hình chụp hiện tại của bạn
-    public partial class lstChat : Form
+    public partial class ClientForm : Form
     {
-        private TcpClient client;
-        private NetworkStream stream;
+        // Biến static để các Form khác bên Client (Chat, QLFile) có thể dùng chung luồng kết nối này
+        public static TcpClient ClientSocket { get; private set; }
 
-        public lstChat()
+        public ClientForm()
         {
             InitializeComponent();
         }
 
-        // 1. SỬA LẠI HÀM KẾT NỐI (Thêm luồng tự động nhận tin nhắn/file thời gian thực)
+        private void ClientForm_Load(object sender, EventArgs e)
+        {
+            this.StartPosition = FormStartPosition.CenterScreen;
+        }
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            try
+            string ip = txtIP.Text.Trim();
+            string portStr = txtPort.Text.Trim();
+
+            if (string.IsNullOrEmpty(ip) || string.IsNullOrEmpty(portStr))
             {
-                client = new TcpClient();
-                client.Connect(txtIP.Text, int.Parse(txtPort.Text));
-
-                stream = client.GetStream();
-
-                MessageBox.Show("Kết nối thành công!");
-
-                // Kích hoạt luồng chạy ngầm để liên tục nghe dữ liệu từ Server mà không bị treo giao diện
-                Task.Run(() => ReceiveData());
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi kết nối: " + ex.Message);
-            }
-        }
-
-        // 2. GIỮ NGUYÊN HÀM GỬI TIN NHẮN (Bổ sung hiển thị lên ListBox của bạn)
-        private void btnSend_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                string message = txtMessage.Text;
-                if (string.IsNullOrEmpty(message)) return;
-
-                byte[] msgBytes = Encoding.UTF8.GetBytes(message);
-                byte[] lengthBytes = BitConverter.GetBytes(msgBytes.Length);
-
-                stream.WriteByte(0x01); // 0x01: Cờ hiệu nhận diện đây là TIN NHẮN TEXT
-                stream.Write(lengthBytes, 0, 4);
-                stream.Write(msgBytes, 0, msgBytes.Length);
-                stream.Flush();
-
-                // Hiển thị tin nhắn bạn vừa gửi lên listBox1
-                listBox1.Items.Add("Bạn: " + message);
-                txtMessage.Clear();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi gửi tin nhắn: " + ex.Message);
-            }
-        }
-
-        // 3. THÊM MỚI HÀM GỬI FILE (Liên kết với nút btnSendFile bạn vừa tạo ở Bước 1)
-        private void btnSendFile_Click(object sender, EventArgs e)
-        {
-            if (client == null || !client.Connected)
-            {
-                MessageBox.Show("Vui lòng kết nối đến Server trước!");
+                MessageBox.Show("Vui lòng nhập đầy đủ Địa chỉ IP và Cổng kết nối!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            if (!int.TryParse(portStr, out int port))
             {
-                try
-                {
-                    string filePath = openFileDialog.FileName;
-                    string fileName = Path.GetFileName(filePath);
-                    byte[] fileData = File.ReadAllBytes(filePath); // Đọc toàn bộ file thành mảng byte
-
-                    // BƯỚC A: Gửi cờ nhận diện (0x02 nghĩa là FILE)
-                    stream.WriteByte(0x02);
-
-                    // BƯỚC B: Gửi độ dài tên file (4 bytes) và Tên file
-                    byte[] nameBytes = Encoding.UTF8.GetBytes(fileName);
-                    stream.Write(BitConverter.GetBytes(nameBytes.Length), 0, 4);
-                    stream.Write(nameBytes, 0, nameBytes.Length);
-
-                    // BƯỚC C: Gửi kích thước dữ liệu file (4 bytes) và Toàn bộ ruột file
-                    stream.Write(BitConverter.GetBytes(fileData.Length), 0, 4);
-                    stream.Write(fileData, 0, fileData.Length);
-
-                    stream.Flush();
-
-                    listBox1.Items.Add("👉 Bạn đã gửi file: " + fileName);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Lỗi khi gửi file: " + ex.Message);
-                }
+                MessageBox.Show("Cổng kết nối phải là ký tự số!", "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
-        }
 
-        // 4. THÊM MỚI LUỒNG NHẬN DỮ LIỆU TỰ ĐỘNG THỜI GIAN THỰC từ Server đổ về
-        private void ReceiveData()
-        {
             try
             {
-                while (client != null && client.Connected)
-                {
-                    // Đọc byte đầu tiên (Header) để phân loại gói tin dữ liệu là gì
-                    int header = stream.ReadByte();
-                    if (header == -1) break; // Server ngắt kết nối đột ngột
+                // Khởi tạo kết nối Socket tới Server
+                ClientSocket = new TcpClient();
+                ClientSocket.Connect(ip, port);
 
-                    if (header == 0x01) // TRƯỜNG HỢP 1: Nhận tin nhắn Text từ Server
-                    {
-                        byte[] lengthBytes = new byte[4];
-                        stream.Read(lengthBytes, 0, 4);
-                        int msgLen = BitConverter.ToInt32(lengthBytes, 0);
+                MessageBox.Show("Kết nối tới Server thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.Hide(); // Ẩn Form kết nối hiện tại đi
 
-                        byte[] msgBytes = new byte[msgLen];
-                        stream.Read(msgBytes, 0, msgLen);
-                        string msg = Encoding.UTF8.GetString(msgBytes);
-
-                        // Đồng bộ hiển thị lên ô listBox1 (phải dùng Invoke vì đang ở luồng khác luồng chính)
-                        Invoke(new Action(() => {
-                            listBox1.Items.Add("Server: " + msg);
-                        }));
-                    }
-                    else if (header == 0x02) // TRƯỜNG HỢP 2: Nhận File từ Server gửi qua
-                    {
-                        // Đọc tên File
-                        byte[] nameLenBytes = new byte[4];
-                        stream.Read(nameLenBytes, 0, 4);
-                        int nameLen = BitConverter.ToInt32(nameLenBytes, 0);
-                        byte[] nameBytes = new byte[nameLen];
-                        stream.Read(nameBytes, 0, nameLen);
-                        string fileName = Encoding.UTF8.GetString(nameBytes);
-
-                        // Đọc nội dung File
-                        byte[] fileLenBytes = new byte[4];
-                        stream.Read(fileLenBytes, 0, 4);
-                        int fileLen = BitConverter.ToInt32(fileLenBytes, 0);
-                        byte[] fileBytes = new byte[fileLen];
-
-                        int bytesRead = 0;
-                        while (bytesRead < fileLen)
-                        {
-                            int read = stream.Read(fileBytes, bytesRead, fileLen - bytesRead);
-                            if (read == 0) break;
-                            bytesRead += read;
-                        }
-
-                        // Lưu file vừa nhận được vào thư mục chạy phần mềm (thư mục Debug/Release)
-                        File.WriteAllBytes(fileName, fileBytes);
-
-                        Invoke(new Action(() => {
-                            listBox1.Items.Add("📥 Đã nhận file thành công: " + fileName);
-                        }));
-                    }
-                }
+                // Tạo và hiển thị Form Menu chính của Client (Truyền Form kết nối vào để quản lý)
+              
+                MainClient mainMenu = new MainClient(this);
+                mainMenu.Show();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Invoke(new Action(() => {
-                    listBox1.Items.Add("⚠️ Đã mất kết nối tới Server.");
-                }));
+                MessageBox.Show($"Không thể kết nối tới Server! Đảm bảo Server đã bật và mở đúng Port.\nChi tiết lỗi: {ex.Message}", "Lỗi kết nối", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ClientSocket = null;
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private void btnExit_Click(object sender, EventArgs e)
         {
-            // Để trống hoặc xóa đi nếu bạn đã xóa label cũ
+            Application.Exit();
         }
     }
 }
