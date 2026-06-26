@@ -81,6 +81,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />
+    <Compile Include="SocketServer.cs" />
     <EmbeddedResource Include="ChatServer.resx">
       <DependentUpon>ChatServer.cs</DependentUpon>
     </EmbeddedResource>

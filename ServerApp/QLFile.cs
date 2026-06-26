@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Net.Sockets;
+using System.Text;
 using System.Windows.Forms;
 
 namespace ServerApp
@@ -29,6 +31,58 @@ namespace ServerApp
             // Cấu hình ListView chọn nguyên dòng trực quan
             lvFiles.View = View.Details;
             lvFiles.FullRowSelect = true;
+            SocketServer.Instance.OnFilesReceived += PopulateListView;
+
+            // Tự động phát lệnh yêu cầu Client quét thư mục gốc C:\ ngay khi vừa mở giao diện
+            RequestClientFiles(txtCurrentPath.Text);
+        }
+        private void RequestClientFiles(string targetPath)
+        {
+            // Cấu trúc gói lệnh gửi đi: REQ_FILES|Đường_dẫn
+            byte[] requestData = Encoding.UTF8.GetBytes("REQ_FILES|" + targetPath);
+
+            lock (SocketServer.Instance.ConnectedClients)
+            {
+                foreach (var client in SocketServer.Instance.ConnectedClients)
+                {
+                    if (client.Connected)
+                    {
+                        try
+                        {
+                            NetworkStream stream = client.GetStream();
+                            stream.Write(requestData, 0, requestData.Length);
+                            break; // Gửi lệnh tới máy Client đầu tiên đang online để tương tác quản lý
+                        }
+                        catch { }
+                    }
+                }
+            }
+        }
+        private void PopulateListView(string fileData)
+        {
+            if (lvFiles.InvokeRequired)
+            {
+                lvFiles.Invoke(new Action<string>(PopulateListView), fileData);
+                return;
+            }
+
+            lvFiles.Items.Clear(); // Xóa sạch các dòng cũ trên giao diện UI
+
+            // Chuỗi dữ liệu từ Client trả về phân tách bằng dấu | : Tên*KíchThước*ĐịnhDạng|Tên2*KíchThước2*ĐịnhDạng2
+            string[] files = fileData.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string fileInfo in files)
+            {
+                string[] details = fileInfo.Split('*');
+                if (details.Length == 3)
+                {
+                    ListViewItem item = new ListViewItem(details[0]); // Cột 1: Tên File / Thư mục
+                    item.SubItems.Add(details[1]);                    // Cột 2: Kích thước
+                    item.SubItems.Add(details[2]);                    // Cột 3: Định dạng
+
+                    lvFiles.Items.Add(item); // Thêm dòng vào ListView
+                }
+            }
         }
 
         // --- CẢI TIẾN 2: BẤM NÚT [...] ĐỂ CHỌN THƯ MỤC LƯU TRÊN SERVER ---
@@ -60,8 +114,7 @@ namespace ServerApp
                 string customPath = txtCurrentPath.Text.Trim();
                 if (!string.IsNullOrEmpty(customPath))
                 {
-                    // TODO: Gửi chuỗi gói tin yêu cầu quét thư mục (ví dụ: "REQ_DIR|" + customPath) sang Client qua Stream
-                    MessageBox.Show($"Đang gửi lệnh yêu cầu Client mở thư mục tự chọn:\n{customPath}", "Gửi yêu cầu");
+                    RequestClientFiles(customPath);
                 }
             }
         }
@@ -79,17 +132,17 @@ namespace ServerApp
                     string folderName = selectedItem.Text;
                     string currentPath = txtCurrentPath.Text;
 
-                    // Đảm bảo dấu xuyệt đường dẫn chính xác
+                    // Đảm bảo xử lý chuẩn dấu xuyệt đường dẫn hệ thống
                     if (!currentPath.EndsWith(@"\"))
                     {
                         currentPath += @"\";
                     }
 
-                    // Cập nhật đường dẫn mới lên thanh TextBox
-                    txtCurrentPath.Text = currentPath + folderName;
+                    string newPath = currentPath + folderName;
+                    txtCurrentPath.Text = newPath; // Cập nhật đường dẫn mới lên thanh tìm kiếm
 
-                    // TODO: Gửi lệnh Socket yêu cầu Client nạp lại danh sách file trong thư mục mới này
-                    MessageBox.Show($"Yêu cầu Client mở thư mục con: {txtCurrentPath.Text}", "Điều hướng nhanh");
+                    // Phát lệnh qua mạng yêu cầu Client nạp lại dữ liệu thư mục con này
+                    RequestClientFiles(newPath);
                 }
             }
         }
@@ -111,8 +164,36 @@ namespace ServerApp
             }
 
             string fileName = selectedItem.Text;
-            // TODO: Triển khai luồng đọc mảng Byte truyền qua mạng và ghi file xuống '_serverDownloadPath'
-            MessageBox.Show($"Đang kết nối nhận luồng dữ liệu file [{fileName}] từ máy con...\nNơi lưu trữ: {_serverDownloadPath}", "Đang tiến hành tải");
+            string fullPathOnClient = txtCurrentPath.Text;
+            if (!fullPathOnClient.EndsWith(@"\")) fullPathOnClient += @"\";
+            fullPathOnClient += fileName;
+
+            // Cấu trúc gói lệnh yêu cầu tải: DOWNLOAD|Đường_Dẫn_Đầy_Đủ_Của_File_Trên_Client
+            byte[] downloadCmd = Encoding.UTF8.GetBytes("DOWNLOAD|" + fullPathOnClient);
+
+            bool sent = false;
+            lock (SocketServer.Instance.ConnectedClients)
+            {
+                foreach (var client in SocketServer.Instance.ConnectedClients)
+                {
+                    if (client.Connected)
+                    {
+                        try
+                        {
+                            NetworkStream stream = client.GetStream();
+                            stream.Write(downloadCmd, 0, downloadCmd.Length);
+                            sent = true;
+                            break;
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+            if (sent)
+            {
+                MessageBox.Show($"Đã gửi lệnh yêu cầu tải file [{fileName}] tới máy con.\nFile tải về sẽ được lưu xuống máy Server tại: {_serverDownloadPath}", "Đang tiến hành tải");
+            }
         }
 
         // --- NÚT XÓA FILE ---
@@ -125,6 +206,9 @@ namespace ServerApp
             }
 
             string targetName = lvFiles.SelectedItems[0].Text;
+            string fullPathToDelete = txtCurrentPath.Text;
+            if (!fullPathToDelete.EndsWith(@"\")) fullPathToDelete += @"\";
+            fullPathToDelete += targetName;
 
             // Hiện hộp thoại xác nhận trước khi xóa tránh nhầm lẫn
             DialogResult result = MessageBox.Show($"Bạn có chắc chắn muốn xóa vĩnh viễn [{targetName}] trên máy Client không?",
@@ -133,8 +217,29 @@ namespace ServerApp
                                                   MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
-                // TODO: Gửi gói lệnh yêu cầu xóa file/thư mục này trên máy Client
-                MessageBox.Show($"Đã gửi lệnh xóa file [{targetName}] tới máy con.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // Cấu trúc gói lệnh yêu cầu xóa: DELETE_FILE|Đường_Dẫn_Đầy_Đủ
+                byte[] deleteCmd = Encoding.UTF8.GetBytes("DELETE_FILE|" + fullPathToDelete);
+
+                lock (SocketServer.Instance.ConnectedClients)
+                {
+                    foreach (var client in SocketServer.Instance.ConnectedClients)
+                    {
+                        if (client.Connected)
+                        {
+                            try
+                            {
+                                NetworkStream stream = client.GetStream();
+                                stream.Write(deleteCmd, 0, deleteCmd.Length);
+                                MessageBox.Show($"Đã phát lệnh yêu cầu xóa [{targetName}] tới máy con thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                                // Tự động kích hoạt quét lại thư mục hiện tại sau khi xóa để cập nhật UI
+                                RequestClientFiles(txtCurrentPath.Text);
+                                break;
+                            }
+                            catch { }
+                        }
+                    }
+                }
             }
         }
 
@@ -158,6 +263,7 @@ namespace ServerApp
         // --- HÀM BẢO VỆ KHI BẤM DẤU [X] ĐỎ GÓC FORM ---
         private void QLFile_FormClosing(object sender, FormClosingEventArgs e)
         {
+            SocketServer.Instance.OnFilesReceived -= PopulateListView;
             if (_mainMenu != null && !_mainMenu.Visible)
             {
                 _mainMenu.Show();

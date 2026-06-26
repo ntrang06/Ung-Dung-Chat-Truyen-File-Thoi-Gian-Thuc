@@ -18,6 +18,7 @@ namespace ServerApp
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            SocketServer.Instance.Start();
             // Form mở lên trống trải, gọn gàng và hiện nguyên vẹn 3 nút Menu ban đầu
         }
 

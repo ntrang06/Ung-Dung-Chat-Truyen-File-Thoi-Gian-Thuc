@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -38,6 +39,7 @@ namespace ServerApp
         // --- SỰ KIỆN ĐỀ PHÒNG NGƯỜI DÙNG BẤM DẤU [X] ĐỎ THAY VÌ BẤM NÚT QUAY LẠI ---
         private void ChatServer_FormClosing(object sender, FormClosingEventArgs e)
         {
+            SocketServer.Instance.OnChatReceived -= AppendChatMessage;
             // Nếu tắt bằng dấu X và Menu chính đang ẩn thì hiện Menu lên lại
             if (_mainMenu != null && !_mainMenu.Visible)
             {
@@ -48,21 +50,64 @@ namespace ServerApp
         // --- NÚT GỬI TIN NHẮN ---
         private void btnSend_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtInput.Text.Trim())) return;
+            if (string.IsNullOrWhiteSpace(txtInput.Text)) return;
 
-            string msg = txtInput.Text.Trim();
+            string msgToSend = txtInput.Text;
 
-            // Hiển thị tin nhắn của Server lên ô lịch sử lớn
-            HienThiTinNhan($"[Server]: {msg}");
+            // Định dạng gói tin chat theo chuẩn: CHAT|Nội dung
+            byte[] data = Encoding.UTF8.GetBytes("CHAT|" + msgToSend);
 
-            // Xóa trống ô nhập để sẵn sàng gõ tin tiếp theo
-            txtInput.Clear();
-            txtInput.Focus();
+            bool splitSend = false;
+
+            // Duyệt qua tất cả các Client đang online để gửi tin nhắn của Server tới toàn bộ các máy
+            lock (SocketServer.Instance.ConnectedClients)
+            {
+                foreach (var client in SocketServer.Instance.ConnectedClients)
+                {
+                    if (client.Connected)
+                    {
+                        try
+                        {
+                            NetworkStream stream = client.GetStream();
+                            stream.Write(data, 0, data.Length);
+                            splitSend = true;
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+            if (splitSend)
+            {
+                // Hiển thị tin nhắn chính mình vừa gửi lên Khung chat dòng chữ [Server]
+                txtChatHistory.AppendText($"[Server]: {msgToSend}" + Environment.NewLine);
+
+                // Xóa trống ô nhập tin nhắn để chuẩn bị gõ câu tiếp theo
+                txtChatHistory.Clear();
+                txtChatHistory.Focus();
+            }
+            else
+            {
+                MessageBox.Show("Hiện tại không có máy Client nào kết nối để nhận tin nhắn!", "Thông báo");
+            }
         }
 
         private void ChatServer_Load(object sender, EventArgs e)
         {
+            SocketServer.Instance.OnChatReceived += AppendChatMessage;
             // Để trống hoặc viết cấu hình Socket khi load Form tại đây
+        }
+        private void AppendChatMessage(string message)
+        {
+            // Tránh lỗi xung đột luồng giao diện (Cross-thread)
+            if (txtChatHistory.InvokeRequired)
+            {
+                txtChatHistory.Invoke(new Action<string>(AppendChatMessage), message);
+                return;
+            }
+
+            // Thêm tin nhắn mới vào khung hiển thị nội dung chat và xuống dòng
+            txtChatHistory.AppendText(message + Environment.NewLine);
         }
 
         // Hàm hỗ trợ hiển thị tin nhắn từ các luồng khác nhau
