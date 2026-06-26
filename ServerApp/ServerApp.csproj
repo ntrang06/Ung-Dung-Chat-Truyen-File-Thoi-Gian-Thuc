@@ -84,6 +84,9 @@
     <EmbeddedResource Include="ChatServer.resx">
       <DependentUpon>ChatServer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="GSClient.resx">
+      <DependentUpon>GSClient.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>

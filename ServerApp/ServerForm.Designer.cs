@@ -47,8 +47,9 @@
             // 
             // btnKhoiDongServer
             // 
-            this.btnKhoiDongServer.BackColor = System.Drawing.SystemColors.Info;
+            this.btnKhoiDongServer.BackColor = System.Drawing.Color.Tomato;
             this.btnKhoiDongServer.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnKhoiDongServer.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.btnKhoiDongServer.Location = new System.Drawing.Point(133, 265);
             this.btnKhoiDongServer.Name = "btnKhoiDongServer";
             this.btnKhoiDongServer.Size = new System.Drawing.Size(141, 46);
@@ -69,8 +70,9 @@
             // 
             // btnDungServer
             // 
-            this.btnDungServer.BackColor = System.Drawing.SystemColors.Info;
+            this.btnDungServer.BackColor = System.Drawing.Color.Tomato;
             this.btnDungServer.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDungServer.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.btnDungServer.Location = new System.Drawing.Point(417, 268);
             this.btnDungServer.Name = "btnDungServer";
             this.btnDungServer.Size = new System.Drawing.Size(126, 43);
@@ -96,6 +98,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.label2.Location = new System.Drawing.Point(25, 74);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(607, 26);

@@ -34,7 +34,11 @@ namespace ServerApp
 
         private void btnGiamSat_Click(object sender, EventArgs e)
         {
-            // Sau này làm chức năng Giám sát bạn chỉ cần gọi tương tự:
+            GSClient fGiamSat = new GSClient(this);
+
+            // Ẩn Menu chính đi
+            this.Hide();
+            fGiamSat.Show();
             // FormGiamSat f = new FormGiamSat(); f.Show();
         }
 
