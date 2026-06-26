@@ -44,7 +44,9 @@ namespace ServerApp
 
         private void btnQuanLyFile_Click(object sender, EventArgs e)
         {
-            // Sau này làm chức năng Quản lý file bạn cũng gọi lên Form riêng như vậy
+            QLFile fileForm = new QLFile(this);
+            fileForm.Show();
+            this.Hide();
         }
 
         // --- NÚT QUAY LẠI TRÊN MENU (TRỞ VỀ FORM NHẬP PORT BAN ĐẦU) ---

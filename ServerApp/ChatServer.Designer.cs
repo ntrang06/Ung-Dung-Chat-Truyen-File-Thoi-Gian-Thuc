@@ -29,11 +29,11 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnSend = new System.Windows.Forms.Button();
             this.txtInput = new System.Windows.Forms.TextBox();
             this.txtChatHistory = new System.Windows.Forms.TextBox();
             this.btnBackToMenu = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.btnSend = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -50,6 +50,17 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(814, 472);
             this.panel1.TabIndex = 0;
+            // 
+            // btnSend
+            // 
+            this.btnSend.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            this.btnSend.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSend.Location = new System.Drawing.Point(694, 414);
+            this.btnSend.Name = "btnSend";
+            this.btnSend.Size = new System.Drawing.Size(104, 36);
+            this.btnSend.TabIndex = 9;
+            this.btnSend.Text = "Gửi ";
+            this.btnSend.UseVisualStyleBackColor = false;
             // 
             // txtInput
             // 
@@ -94,17 +105,6 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "KHUNG CHAT HỆ THỐNG (SERVER)";
             this.label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // btnSend
-            // 
-            this.btnSend.BackColor = System.Drawing.Color.PaleTurquoise;
-            this.btnSend.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSend.Location = new System.Drawing.Point(694, 414);
-            this.btnSend.Name = "btnSend";
-            this.btnSend.Size = new System.Drawing.Size(104, 36);
-            this.btnSend.TabIndex = 9;
-            this.btnSend.Text = "Gửi ";
-            this.btnSend.UseVisualStyleBackColor = false;
             // 
             // ChatServer
             // 
