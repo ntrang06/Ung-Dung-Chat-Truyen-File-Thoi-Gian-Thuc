@@ -182,5 +182,15 @@ namespace ClientApp
         {
             // Để trống hoặc xóa đi nếu bạn đã xóa label cũ
         }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtMessage_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

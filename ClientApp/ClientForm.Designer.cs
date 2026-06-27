@@ -55,26 +55,28 @@
             this.panel1.Controls.Add(this.txtIP);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(681, 450);
+            this.panel1.Size = new System.Drawing.Size(605, 360);
             this.panel1.TabIndex = 0;
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(142, 271);
+            this.label4.Location = new System.Drawing.Point(126, 217);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(167, 26);
+            this.label4.Size = new System.Drawing.Size(151, 24);
             this.label4.TabIndex = 8;
             this.label4.Text = "Tên người dùng:";
             // 
             // txtClientName
             // 
             this.txtClientName.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtClientName.Location = new System.Drawing.Point(315, 268);
+            this.txtClientName.Location = new System.Drawing.Point(280, 214);
+            this.txtClientName.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txtClientName.Name = "txtClientName";
-            this.txtClientName.Size = new System.Drawing.Size(230, 32);
+            this.txtClientName.Size = new System.Drawing.Size(205, 28);
             this.txtClientName.TabIndex = 7;
             // 
             // btnExit
@@ -82,9 +84,10 @@
             this.btnExit.BackColor = System.Drawing.Color.Tomato;
             this.btnExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnExit.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.btnExit.Location = new System.Drawing.Point(415, 339);
+            this.btnExit.Location = new System.Drawing.Point(369, 271);
+            this.btnExit.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnExit.Name = "btnExit";
-            this.btnExit.Size = new System.Drawing.Size(130, 51);
+            this.btnExit.Size = new System.Drawing.Size(116, 41);
             this.btnExit.TabIndex = 6;
             this.btnExit.Text = "Dừng";
             this.btnExit.UseVisualStyleBackColor = false;
@@ -95,9 +98,10 @@
             this.btnConnect.BackColor = System.Drawing.Color.Tomato;
             this.btnConnect.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnConnect.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.btnConnect.Location = new System.Drawing.Point(158, 342);
+            this.btnConnect.Location = new System.Drawing.Point(140, 274);
+            this.btnConnect.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(120, 48);
+            this.btnConnect.Size = new System.Drawing.Size(107, 38);
             this.btnConnect.TabIndex = 5;
             this.btnConnect.Text = "Kết Nối";
             this.btnConnect.UseVisualStyleBackColor = false;
@@ -107,9 +111,9 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(142, 202);
+            this.label3.Location = new System.Drawing.Point(126, 162);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(116, 26);
+            this.label3.Size = new System.Drawing.Size(99, 24);
             this.label3.TabIndex = 4;
             this.label3.Text = "Nhập Port:";
             // 
@@ -117,9 +121,9 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(142, 136);
+            this.label2.Location = new System.Drawing.Point(126, 109);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(103, 26);
+            this.label2.Size = new System.Drawing.Size(87, 24);
             this.label2.TabIndex = 3;
             this.label2.Text = "Nhập IP: ";
             // 
@@ -128,34 +132,37 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Gill Sans Ultra Bold", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.label1.Location = new System.Drawing.Point(84, 36);
+            this.label1.Location = new System.Drawing.Point(75, 29);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(509, 31);
+            this.label1.Size = new System.Drawing.Size(432, 26);
             this.label1.TabIndex = 2;
             this.label1.Text = "Nhập thông tin để kết nối đến Server";
             // 
             // txtPort
             // 
             this.txtPort.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtPort.Location = new System.Drawing.Point(273, 202);
+            this.txtPort.Location = new System.Drawing.Point(243, 162);
+            this.txtPort.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txtPort.Name = "txtPort";
-            this.txtPort.Size = new System.Drawing.Size(272, 32);
+            this.txtPort.Size = new System.Drawing.Size(242, 28);
             this.txtPort.TabIndex = 1;
             // 
             // txtIP
             // 
             this.txtIP.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtIP.Location = new System.Drawing.Point(251, 133);
+            this.txtIP.Location = new System.Drawing.Point(223, 106);
+            this.txtIP.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txtIP.Name = "txtIP";
-            this.txtIP.Size = new System.Drawing.Size(294, 32);
+            this.txtIP.Size = new System.Drawing.Size(262, 28);
             this.txtIP.TabIndex = 0;
             // 
             // ClientForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(681, 450);
+            this.ClientSize = new System.Drawing.Size(605, 360);
             this.Controls.Add(this.panel1);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "ClientForm";
             this.Text = "ClientForm";
             this.Load += new System.EventHandler(this.ClientForm_Load);
