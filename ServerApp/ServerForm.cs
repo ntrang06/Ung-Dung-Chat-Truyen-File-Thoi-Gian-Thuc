@@ -15,7 +15,6 @@ namespace ServerApp
         // Thì bạn chỉ cần đổi tên hàm dưới đây thành btnStartServer_Click_1 cho khớp nhé.
         private void btnKhoiDongServer_Click(object sender, EventArgs e)
         {
-            // 1. Kiểm tra dữ liệu ô nhập liệu (Đảm bảo ô TextBox tên là txtPort)
             string portInput = txtPort.Text.Trim();
             if (string.IsNullOrEmpty(portInput))
             {
@@ -26,12 +25,14 @@ namespace ServerApp
             // 2. Ép kiểu chữ sang số nguyên int
             if (int.TryParse(portInput, out int port))
             {
-                // Kiểm tra dải Port an toàn hệ thống (thường từ 1024 - 65535)
                 if (port < 1024 || port > 65535)
                 {
                     MessageBox.Show("Vui lòng nhập Port trong khoảng an toàn từ 1024 đến 65535!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+
+                // >>> BỔ SUNG DÒNG NÀY: Bật socket lắng nghe thực sự dưới tầng mạng <<<
+                SocketServer.Instance.Start(port);
 
                 // 3. Khởi tạo MainForm và truyền Port sang cho Menu chính
                 MainForm mainApp = new MainForm(port, this);

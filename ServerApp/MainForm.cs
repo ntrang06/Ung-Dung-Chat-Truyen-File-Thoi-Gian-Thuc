@@ -18,7 +18,7 @@ namespace ServerApp
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            SocketServer.Instance.Start();
+            SocketServer.Instance.Start(_port);
             // Form mở lên trống trải, gọn gàng và hiện nguyên vẹn 3 nút Menu ban đầu
         }
 
@@ -53,6 +53,7 @@ namespace ServerApp
         // --- NÚT QUAY LẠI TRÊN MENU (TRỞ VỀ FORM NHẬP PORT BAN ĐẦU) ---
         private void btnBack_Click(object sender, EventArgs e)
         {
+            SocketServer.Instance.Stop();
             this.Dispose(); // Giải phóng MainForm hiện tại
             if (_configForm != null)
             {
@@ -71,7 +72,13 @@ namespace ServerApp
             btnBack_Click(sender, e);
         }
         public void QuayVeMenu()
-        {                
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new MethodInvoker(QuayVeMenu));
+                return;
+            }
+            this.Show();
         }
     }
 }
