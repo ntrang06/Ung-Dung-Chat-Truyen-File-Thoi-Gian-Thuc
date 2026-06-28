@@ -79,36 +79,42 @@ namespace ClientApp
                 return;
             }
 
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            OpenFileDialog ofd = new OpenFileDialog();
+
+            if (ofd.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
             {
-                try
-                {
-                    string filePath = openFileDialog.FileName;
-                    string fileName = Path.GetFileName(filePath);
-                    byte[] fileData = File.ReadAllBytes(filePath); // Đọc toàn bộ file thành mảng byte
+                string filePath = ofd.FileName;
+                string fileName = Path.GetFileName(filePath);
 
-                    // BƯỚC A: Gửi cờ nhận diện (0x02 nghĩa là FILE)
-                    stream.WriteByte(0x02);
+                byte[] fileData = File.ReadAllBytes(filePath);
 
-                    // BƯỚC B: Gửi độ dài tên file (4 bytes) và Tên file
-                    byte[] nameBytes = Encoding.UTF8.GetBytes(fileName);
-                    long fileSize = fileData.LongLength;
-                    stream.Write(BitConverter.GetBytes(fileSize), 0, 8);
-                    stream.Write(nameBytes, 0, nameBytes.Length);
+                // Header
+                stream.WriteByte(0x02);
 
-                    // BƯỚC C: Gửi kích thước dữ liệu file (4 bytes) và Toàn bộ ruột file
-                    stream.Write(BitConverter.GetBytes(fileData.Length), 0, 4);
-                    stream.Write(fileData, 0, fileData.Length);
+                // Độ dài tên file
+                byte[] nameBytes = Encoding.UTF8.GetBytes(fileName);
+                stream.Write(BitConverter.GetBytes(nameBytes.Length), 0, 4);
 
-                    stream.Flush();
+                // Tên file
+                stream.Write(nameBytes, 0, nameBytes.Length);
 
-                    listBox1.Items.Add("👉 Bạn đã gửi file: " + fileName);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Lỗi khi gửi file: " + ex.Message);
-                }
+                // Kích thước file (8 byte)
+                long fileSize = fileData.LongLength;
+                stream.Write(BitConverter.GetBytes(fileSize), 0, 8);
+
+                // Nội dung file
+                stream.Write(fileData, 0, fileData.Length);
+
+                stream.Flush();
+
+                listBox1.Items.Add("📤 Đã gửi file: " + fileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
             }
         }
         private void ReadFull(byte[] buffer, int size)
@@ -157,31 +163,30 @@ namespace ClientApp
                     {
                         // Đọc tên File
                         byte[] nameLenBytes = new byte[4];
-                        stream.Read(nameLenBytes, 0, 4);
+                        ReadFull(nameLenBytes, 4);
+
                         int nameLen = BitConverter.ToInt32(nameLenBytes, 0);
+
                         byte[] nameBytes = new byte[nameLen];
-                        stream.Read(nameBytes, 0, nameLen);
+                        ReadFull(nameBytes, nameLen);
+
                         string fileName = Encoding.UTF8.GetString(nameBytes);
 
-                        // Đọc nội dung File
-                        byte[] fileLenBytes = new byte[4];
-                        stream.Read(fileLenBytes, 0, 4);
-                        int fileLen = BitConverter.ToInt32(fileLenBytes, 0);
-                        byte[] fileBytes = new byte[fileLen];
+                        // kích thước file
+                        byte[] sizeBytes = new byte[8];
+                        ReadFull(sizeBytes, 8);
 
-                        int bytesRead = 0;
-                        while (bytesRead < fileLen)
-                        {
-                            int read = stream.Read(fileBytes, bytesRead, fileLen - bytesRead);
-                            if (read == 0) break;
-                            bytesRead += read;
-                        }
+                        long fileSize = BitConverter.ToInt64(sizeBytes, 0);
 
-                        // Lưu file vừa nhận được vào thư mục chạy phần mềm (thư mục Debug/Release)
+                        // dữ liệu file
+                        byte[] fileBytes = new byte[fileSize];
+                        ReadFull(fileBytes, (int)fileSize);
+
                         File.WriteAllBytes(fileName, fileBytes);
 
-                        Invoke(new Action(() => {
-                            listBox1.Items.Add("📥 Đã nhận file thành công: " + fileName);
+                        Invoke(new Action(() =>
+                        {
+                            listBox1.Items.Add("📥 Đã nhận file: " + fileName);
                         }));
                     }
                 }
