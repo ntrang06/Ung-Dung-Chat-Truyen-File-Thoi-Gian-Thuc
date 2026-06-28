@@ -51,7 +51,10 @@ namespace ServerApp
                 }
             }
             lblTotalClients.Text = $"Tổng số máy đang kết nối: {SocketServer.Instance.ConnectedClients.Count}";
-            
+            if (lstClients.Items.Count > 0 && lstClients.SelectedIndex == -1)
+            {
+                lstClients.SelectedIndex = 0; // Tự động bôi xanh máy đầu tiên
+            }
         }
 
         private void lstClients_SelectedIndexChanged(object sender, EventArgs e)
@@ -140,46 +143,40 @@ namespace ServerApp
                 }
             }
         }
-
-        // --- NÚT GỬI CẢNH BÁO THẬT SỰ ĐÃ SỬA CHUẨN ĐƯỜNG TRUYỀN ---
+        // --- NÚT GỬI CẢNH BÁO ĐỒNG LOẠT CHO TẤT CẢ CLIENT ---
         private void btnBuzz_Click(object sender, EventArgs e)
         {
-            if (lstClients.SelectedItem == null)
-            {
-                MessageBox.Show("Vui lòng chọn một máy Client để gửi cảnh báo!");
-                return;
-            }
-
-            string selectedText = lstClients.SelectedItem.ToString();
+            byte[] data = Encoding.UTF8.GetBytes("BUZZ|Hành vi của bạn đang bị giám sát!");
+            int count = 0;
 
             lock (SocketServer.Instance.ConnectedClients)
             {
-                // Tìm chính xác đối tượng nhận cảnh báo
-                var targetClient = SocketServer.Instance.ConnectedClients.FirstOrDefault(c =>
-                    $"{c.Name} ({(IPEndPoint)c.Socket.Client.RemoteEndPoint})" == selectedText);
-
-                if (targetClient != null && targetClient.Socket.Connected)
+                // Duyệt qua TẤT CẢ các Client đang online để phát cảnh báo đồng loạt
+                foreach (var client in SocketServer.Instance.ConnectedClients)
                 {
-                    try
+                    if (client.Socket != null && client.Socket.Connected)
                     {
-                        NetworkStream stream = targetClient.Socket.GetStream();
-
-                        // Định dạng chuỗi payload gửi đi bao gồm tiền tố phân biệt BUZZ|
-                        byte[] data = Encoding.UTF8.GetBytes("BUZZ|Hành vi của bạn đang bị giám sát!");
-                        stream.Write(data, 0, data.Length);
-                        stream.Flush(); // Ép luồng mạng đẩy gói tin đi ngay lập tức không đợi bộ đệm
-
-                        MessageBox.Show($"Đã gửi lệnh cảnh báo đến máy {targetClient.Name}!");
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Lỗi đường truyền thiết bị: {ex.Message}");
+                        try
+                        {
+                            NetworkStream stream = client.Socket.GetStream();
+                            stream.Write(data, 0, data.Length);
+                            stream.Flush(); // Ép luồng mạng đẩy gói tin đi ngay lập tức không đợi bộ đệm
+                            count++;
+                        }
+                        catch
+                        {
+                           
+                        }
                     }
                 }
-                else
-                {
-                    MessageBox.Show("Không tìm thấy thực thể kết nối của Client này, có thể máy đã Offline.");
-                }
+            }
+            if (count > 0)
+            {
+                MessageBox.Show($"Đã phát lệnh cảnh báo thành công tới toàn bộ {count} máy con đang online!", "Thành công");
+            }
+            else
+            {
+                MessageBox.Show("Không có máy Client nào đang kết nối để nhận cảnh báo!", "Thông báo");
             }
         }
 

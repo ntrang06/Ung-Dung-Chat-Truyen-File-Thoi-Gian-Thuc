@@ -15,6 +15,7 @@ namespace ServerApp
     {
         // VỊ TRÍ QUAN TRỌNG: Phải khai báo biến này ở đây để toàn bộ các hàm bên dưới dùng chung
         private Form _mainMenu;
+        private int successfullySent;
 
         // Hàm khởi tạo nhận MainForm truyền vào từ bên ngoài
         public ChatServer(Form mainMenu)
@@ -57,39 +58,40 @@ namespace ServerApp
             // Định dạng gói tin chat theo chuẩn: CHAT|Nội dung
             byte[] data = Encoding.UTF8.GetBytes("CHAT|" + msgToSend);
 
-            bool splitSend = false;
+            // RESET lại biến đếm số máy gửi thành công trước khi chạy vòng lặp
+            successfullySent = 0;
 
             // Duyệt qua tất cả các Client đang online để gửi tin nhắn của Server tới toàn bộ các máy
             lock (SocketServer.Instance.ConnectedClients)
             {
-                foreach (var clientInfo in SocketServer.Instance.ConnectedClients)
+                foreach (var client in SocketServer.Instance.ConnectedClients)
                 {
-                    // ĐÃ SỬA: Đổi client thành clientInfo ở vế sau
-                    if (clientInfo.Socket != null && clientInfo.Socket.Connected)
+                    if (client.Socket != null && client.Socket.Connected)
                     {
                         try
                         {
-                            NetworkStream stream = clientInfo.Socket.GetStream();
+                            NetworkStream stream = client.Socket.GetStream();
                             stream.Write(data, 0, data.Length);
-                            splitSend = true;
+                            successfullySent++; // Tăng số lượng máy gửi thành công
                         }
                         catch { }
                     }
                 }
             }
 
-            if (splitSend)
+            // THAY ĐỔI LOGIC KIỂM TRA: Dựa vào biến đếm successfullySent thay vì splitSend
+            if (successfullySent > 0)
             {
-                // Hiển thị tin nhắn chính mình vừa gửi lên Khung chat dòng chữ [Server]
+                // Hiển thị tin nhắn chính mình vừa gửi lên Khung lịch sử chat
                 txtChatHistory.AppendText($"[Server]: {msgToSend}" + Environment.NewLine);
 
-                // Xóa trống ô nhập tin nhắn để chuẩn bị gõ câu tiếp theo
-                txtChatHistory.Clear();
-                txtChatHistory.Focus();
+                // ĐÃ SỬA: Xóa trống ô NHẬP TIN NHẮN (txtInput) để gõ câu tiếp theo, chứ không xóa lịch sử (txtChatHistory)
+                txtInput.Clear();
+                txtInput.Focus();
             }
             else
             {
-                MessageBox.Show("Hiện tại không có máy Client nào kết nối để nhận tin nhắn!", "Thông báo");
+                MessageBox.Show("Hiện tại không có máy Client nào kết nối hoặc không gửi được tin nhắn!", "Thông báo");
             }
         }
 

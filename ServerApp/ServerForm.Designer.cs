@@ -44,6 +44,7 @@
             this.txtPort.Name = "txtPort";
             this.txtPort.Size = new System.Drawing.Size(138, 32);
             this.txtPort.TabIndex = 0;
+            this.txtPort.Text = "9999";
             // 
             // btnKhoiDongServer
             // 
