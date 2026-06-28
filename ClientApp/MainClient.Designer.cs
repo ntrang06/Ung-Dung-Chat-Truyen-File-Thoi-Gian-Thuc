@@ -63,18 +63,20 @@
             this.btnExit.TabIndex = 10;
             this.btnExit.Text = "Thoát ";
             this.btnExit.UseVisualStyleBackColor = false;
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
             // btnFile
             // 
             this.btnFile.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
             this.btnFile.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnFile.Location = new System.Drawing.Point(174, 139);
-            this.btnFile.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
+            this.btnFile.Margin = new System.Windows.Forms.Padding(0);
             this.btnFile.Name = "btnFile";
             this.btnFile.Size = new System.Drawing.Size(171, 35);
             this.btnFile.TabIndex = 9;
             this.btnFile.Text = "Truyền File";
             this.btnFile.UseVisualStyleBackColor = false;
+            this.btnFile.Click += new System.EventHandler(this.btnFile_Click);
             // 
             // btnChat
             // 
@@ -87,6 +89,7 @@
             this.btnChat.TabIndex = 8;
             this.btnChat.Text = "Chat trực tiếp";
             this.btnChat.UseVisualStyleBackColor = false;
+            this.btnChat.Click += new System.EventHandler(this.btnChat_Click);
             // 
             // label1
             // 
