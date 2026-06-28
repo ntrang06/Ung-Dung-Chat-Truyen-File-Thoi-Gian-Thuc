@@ -14,10 +14,8 @@ namespace ServerApp
 {
     public partial class GSClient : Form
     {
-        // Khai báo biến toàn cục để lưu lại Menu chính
         private Form _mainMenu;
 
-        // ĐÃ SỬA: Hàm khởi tạo nhận MainForm truyền vào từ bên ngoài
         public GSClient(Form mainMenu)
         {
             InitializeComponent();
@@ -28,14 +26,14 @@ namespace ServerApp
         {
             SocketServer.Instance.OnClientListChanged += UpdateClientListUI;
             UpdateClientListUI();
-            // Thiết lập vị trí Form hiện ra ngay chính giữa màn hình máy tính
             this.StartPosition = FormStartPosition.CenterScreen;
         }
+
         private void UpdateClientListUI()
         {
-            if (lstClients.InvokeRequired)
+            if (this.InvokeRequired)
             {
-                lstClients.Invoke(new Action(UpdateClientListUI));
+                this.Invoke(new Action(UpdateClientListUI));
                 return;
             }
 
@@ -45,46 +43,62 @@ namespace ServerApp
             {
                 foreach (var client in SocketServer.Instance.ConnectedClients)
                 {
-                    if (client.Connected)
+                    if (client.Socket != null && client.Socket.Connected)
                     {
-                        IPEndPoint ipEnd = (IPEndPoint)client.Client.RemoteEndPoint;
-                        lstClients.Items.Add($"{ipEnd.Address}:{ipEnd.Port}");
+                        // ĐÃ SỬA: Đưa nguyên đối tượng client vào đây (ListBox tự gọi ToString() để hiển thị)
+                        lstClients.Items.Add(client);
                     }
                 }
-                // Cập nhật nhãn tổng số lượng máy ở bên dưới
-                lblTotalClients.Text = $"Tổng số máy đang kết nối: {SocketServer.Instance.ConnectedClients.Count}";
             }
+            lblTotalClients.Text = $"Tổng số máy đang kết nối: {SocketServer.Instance.ConnectedClients.Count}";
+            
         }
+
         private void lstClients_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (lstClients.SelectedItem == null) return;
-
-            string selectedText = lstClients.SelectedItem.ToString();
-            string[] parts = selectedText.Split(':');
-
-            if (parts.Length == 2)
+            // Thao tác này giờ hoạt động hoàn hảo vì SelectedItem đang giữ thực thể ClientInfo thực thụ
+            if (lstClients.SelectedItem is ClientInfo selectedClient)
             {
-                lblIP.Text = $"Địa chỉ IP: {parts[0]}";
-                lblPort.Text = $"Cổng kết nối: {parts[1]}";
-                lblTime.Text = $"Thời gian vào: {DateTime.Now.ToString("HH:mm:ss")}";
-                lblStatus.Text = "Trạng thái: Đang kết nối";
+                try
+                {
+                    var ipEnd = (System.Net.IPEndPoint)selectedClient.Socket.Client.RemoteEndPoint;
+
+                    // Đổ chính xác thông tin vào các Label/TextBox bên cột phải của bạn
+                    lblIP.Text = $"Địa chỉ IP: {ipEnd.Address}";
+                    lblPort.Text = $"Cổng kết nối: {ipEnd.Port}";
+                    lblStatus.Text = $"Trạng thái: Đang hoạt động (Online)";
+
+                    // Nếu trong ClientInfo của bạn có lưu biến thời gian đăng nhập (ví dụ LoginTime)
+                    lblTime.Text = $"Thời gian vào: {selectedClient.LoginTime:HH:mm:ss}";
+                }
+                catch
+                {
+                    ClearDetails();
+                }
+            }
+            else
+            {
+                ClearDetails();
             }
         }
 
-        // --- NÚT QUAY LẠI TRÊN GIAO DIỆN GIÁM SÁT ---
+        // Hàm dọn chữ khi không click chọn ai
+        private void ClearDetails()
+        {
+            lblIP.Text = "Địa chỉ IP:";
+            lblPort.Text = "Cổng kết nối:";
+            lblStatus.Text = "Trạng thái:";
+        }
+
         private void btnBackToMenu_Click(object sender, EventArgs e)
         {
-            // Hiện lại Menu chính ban đầu trước
             if (_mainMenu != null)
             {
                 _mainMenu.Show();
             }
-
-            // Sau đó mới đóng cửa sổ giám sát hiện tại
             this.Close();
         }
 
-        // --- SỰ KIỆN PHÒNG HỜ NGƯỜI DÙNG BẤM DẤU [X] ĐỎ TRÊN GÓC CỬA SỔ ---
         private void GSClient_FormClosing(object sender, FormClosingEventArgs e)
         {
             SocketServer.Instance.OnClientListChanged -= UpdateClientListUI;
@@ -96,9 +110,9 @@ namespace ServerApp
 
         private void lblPort_Click(object sender, EventArgs e)
         {
-
         }
 
+        // --- NÚT ĐÁ MÁY CLIENT (KICK) ---
         private void btnKick_Click(object sender, EventArgs e)
         {
             if (lstClients.SelectedItem == null)
@@ -114,18 +128,20 @@ namespace ServerApp
             {
                 lock (SocketServer.Instance.ConnectedClients)
                 {
+                    // Tìm đối tượng cần đá dựa trên chuỗi định dạng hiển thị
                     var clientToKick = SocketServer.Instance.ConnectedClients.FirstOrDefault(c =>
-                        c.Connected && ((IPEndPoint)c.Client.RemoteEndPoint).ToString() == selectedText);
+                        $"{c.Name} ({(IPEndPoint)c.Socket.Client.RemoteEndPoint})" == selectedText);
 
                     if (clientToKick != null)
                     {
-                        clientToKick.Close(); // Đóng kết nối ngầm
+                        clientToKick.Socket.Close(); // Ngắt kết nối socket của client đó
                         MessageBox.Show("Đã ngắt kết nối thành công!");
                     }
                 }
             }
         }
 
+        // --- NÚT GỬI CẢNH BÁO THẬT SỰ ĐÃ SỬA CHUẨN ĐƯỜNG TRUYỀN ---
         private void btnBuzz_Click(object sender, EventArgs e)
         {
             if (lstClients.SelectedItem == null)
@@ -138,22 +154,31 @@ namespace ServerApp
 
             lock (SocketServer.Instance.ConnectedClients)
             {
+                // Tìm chính xác đối tượng nhận cảnh báo
                 var targetClient = SocketServer.Instance.ConnectedClients.FirstOrDefault(c =>
-                    c.Connected && ((IPEndPoint)c.Client.RemoteEndPoint).ToString() == selectedText);
+                    $"{c.Name} ({(IPEndPoint)c.Socket.Client.RemoteEndPoint})" == selectedText);
 
-                if (targetClient != null)
+                if (targetClient != null && targetClient.Socket.Connected)
                 {
                     try
                     {
-                        NetworkStream stream = targetClient.GetStream();
+                        NetworkStream stream = targetClient.Socket.GetStream();
+
+                        // Định dạng chuỗi payload gửi đi bao gồm tiền tố phân biệt BUZZ|
                         byte[] data = Encoding.UTF8.GetBytes("BUZZ|Hành vi của bạn đang bị giám sát!");
                         stream.Write(data, 0, data.Length);
-                        MessageBox.Show($"Đã gửi lệnh cảnh báo đến máy {selectedText}!");
+                        stream.Flush(); // Ép luồng mạng đẩy gói tin đi ngay lập tức không đợi bộ đệm
+
+                        MessageBox.Show($"Đã gửi lệnh cảnh báo đến máy {targetClient.Name}!");
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Lỗi: {ex.Message}");
+                        MessageBox.Show($"Lỗi đường truyền thiết bị: {ex.Message}");
                     }
+                }
+                else
+                {
+                    MessageBox.Show("Không tìm thấy thực thể kết nối của Client này, có thể máy đã Offline.");
                 }
             }
         }

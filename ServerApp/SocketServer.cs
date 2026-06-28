@@ -16,8 +16,8 @@ namespace ServerApp
         private bool _isRunning;
         private int _port = 9999;
 
-        // Danh sách quản lý các Client đang kết nối thật
-        public List<TcpClient> ConnectedClients { get; private set; } = new List<TcpClient>();
+        // Danh sách quản lý các Client đang kết nối thật (Đã chuyển sang ClientInfo)
+        public List<ClientInfo> ConnectedClients { get; set; } = new List<ClientInfo>();
 
         // Sự kiện thông báo cho Giao diện (UI) biết khi có Client vừa Online hoặc Offline
         public event Action OnClientListChanged;
@@ -52,6 +52,7 @@ namespace ServerApp
                 MessageBox.Show($"Không thể mở cổng kết nối: {ex.Message}", "Lỗi Socket", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
         public void Stop()
         {
             if (!_isRunning) return;
@@ -72,7 +73,10 @@ namespace ServerApp
                 {
                     foreach (var client in ConnectedClients)
                     {
-                        client.Close();
+                        if (client.Socket != null)
+                        {
+                            client.Socket.Close(); // ĐÃ SỬA DÒNG 75: Chọc vào .Socket để Close()
+                        }
                     }
                     ConnectedClients.Clear();
                 }
@@ -85,6 +89,7 @@ namespace ServerApp
                 System.Diagnostics.Debug.WriteLine($"Lỗi khi dừng Server: {ex.Message}");
             }
         }
+
         // Vòng lặp liên tục chờ máy con (Client) kết nối vào
         private void ListenForClients()
         {
@@ -94,16 +99,32 @@ namespace ServerApp
                 {
                     TcpClient client = _listener.AcceptTcpClient();
 
+                    // ĐỌC GÓI TIN ĐỊNH DANH ĐẦU TIÊN ĐỂ LẤY USERNAME
+                    NetworkStream stream = client.GetStream();
+                    byte[] buffer = new byte[1024];
+                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    string firstMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+                    string clientName = "Ẩn danh"; // Tên mặc định nếu lỗi chuỗi
+                    if (firstMessage.StartsWith("CONNECT|"))
+                    {
+                        clientName = firstMessage.Split('|')[1]; // Cắt lấy tên người dùng đằng sau dấu |
+                    }
+
+                    // Tạo thực thể ClientInfo mới
+                    ClientInfo clientInfo = new ClientInfo(client, clientName);
+
                     lock (ConnectedClients)
                     {
-                        ConnectedClients.Add(client);
+                        // ĐÃ SỬA DÒNG 99: Nạp thực thể ClientInfo vào danh sách (Thay vì biến client thô)
+                        ConnectedClients.Add(clientInfo);
                     }
 
                     // Kích hoạt sự kiện cập nhật danh sách lên giao diện
                     OnClientListChanged?.Invoke();
 
-                    // Tạo luồng đọc dữ liệu riêng cho từng Client
-                    Thread clientThread = new Thread(() => HandleClientComm(client));
+                    // Tạo luồng đọc dữ liệu riêng cho từng Client (Truyền clientInfo vào xử lý tiếp)
+                    Thread clientThread = new Thread(() => HandleClientComm(clientInfo));
                     clientThread.IsBackground = true;
                     clientThread.Start();
                 }
@@ -115,15 +136,16 @@ namespace ServerApp
         }
 
         // Hàm xử lý tương tác riêng biệt với từng máy Client
-        private void HandleClientComm(TcpClient client)
+        private void HandleClientComm(ClientInfo clientInfo)
         {
+            TcpClient client = clientInfo.Socket; // Lấy Socket từ ClientInfo ra phục vụ logic đọc mạng cũ
             NetworkStream stream = client.GetStream();
             byte[] buffer = new byte[8192]; // Tăng buffer lên 8KB để nhận file mượt hơn
             int bytesRead;
 
             IPEndPoint ipEnd = (IPEndPoint)client.Client.RemoteEndPoint;
 
-            while (_isRunning)
+            while (_isRunning && client.Connected)
             {
                 try
                 {
@@ -139,19 +161,19 @@ namespace ServerApp
                 // Kiểm tra xem là gói tin TEXT hay FILE_STREAM bằng mảng byte thô đầu tiên
                 string headerCheck = Encoding.UTF8.GetString(buffer, 0, Math.Min(bytesRead, 20));
 
-                // 1. Xử lý gói tin CHAT thông thường
+                // 1. Xử lý gói tin CHAT thông thường (Có hiển thị kèm theo Tên người dùng)
                 if (headerCheck.StartsWith("CHAT|"))
                 {
                     string rawData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     string chatMessage = rawData.Substring(5);
-                    OnChatReceived?.Invoke($"[Client {ipEnd.Address}]: {chatMessage}");
+                    OnChatReceived?.Invoke($"[{clientInfo.Name} - {ipEnd.Address}]: {chatMessage}");
                 }
                 // 2. Xử lý nhận gói tin FILE_STREAM (Tách header văn bản và mảng byte thô)
                 else if (headerCheck.StartsWith("FILE_STREAM|"))
                 {
                     try
                     {
-                        // Đọc toán bộ chuỗi thô để định vị các dấu phân cách '|'
+                        // Đọc toàn bộ chuỗi thô để định vị các dấu phân cách '|'
                         string rawHeaderString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                         string[] fileParts = rawHeaderString.Split('|');
 
@@ -163,7 +185,6 @@ namespace ServerApp
                         string savePath = Path.Combine(desktopPath, fileName);
 
                         // Tìm vị trí kết thúc của Header để lấy vị trí bắt đầu của dữ liệu nhị phân
-                        // Cấu trúc: FILE_STREAM|tên_file|độ_dài|
                         string fullHeader = $"FILE_STREAM|{fileName}|{fileSize}|";
                         int headerLength = Encoding.UTF8.GetByteCount(fullHeader);
 
@@ -189,7 +210,7 @@ namespace ServerApp
                         }
 
                         // Bắn sự kiện lên giao diện thông báo nhận tệp thành công
-                        OnFilesReceived?.Invoke($"[Hệ thống]: Đã nhận file '{fileName}' ({fileSize} bytes) từ Client {ipEnd.Address} lưu tại Desktop.");
+                        OnFilesReceived?.Invoke($"[Hệ thống]: Đã nhận file '{fileName}' ({fileSize} bytes) từ Client {clientInfo.Name} ({ipEnd.Address}) lưu tại Desktop.");
                     }
                     catch (Exception ex)
                     {
@@ -198,8 +219,12 @@ namespace ServerApp
                 }
             }
 
-            // Giải phóng Client khi ngắt kết nối
-            lock (ConnectedClients) { ConnectedClients.Remove(client); }
+            // Giải phóng Client khỏi danh sách khi ngắt kết nối
+            lock (ConnectedClients)
+            {
+                // ĐÃ SỬA DÒNG 202: Xóa thực thể clientInfo (Thay vì xóa client thô)
+                ConnectedClients.Remove(clientInfo);
+            }
             OnClientListChanged?.Invoke();
         }
     }

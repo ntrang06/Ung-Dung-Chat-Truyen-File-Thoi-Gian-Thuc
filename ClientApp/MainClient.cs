@@ -14,42 +14,30 @@ namespace ClientApp
     public partial class MainClient : Form
     {
         private Form _connectForm;
+
         public MainClient(Form connectForm)
         {
             InitializeComponent();
             this._connectForm = connectForm;
         }
-       
+
         private void MainClient_Load(object sender, EventArgs e)
         {
             this.StartPosition = FormStartPosition.CenterScreen;
+            // Không cần gọi luồng mạng ở đây nữa!
         }
 
         private void btnBackToConfig_Click(object sender, EventArgs e)
         {
+            SocketClient.Instance.Disconnect(); // Ngắt kết nối khi chủ động quay lại
             this.Close();
-            this.Dispose(); // Giải phóng MainForm hiện tại
-            if (_connectForm != null)
-            {
-                _connectForm.Show(); // Hiện lại ServerForm nhập Port ban đầu
-            }
+            if (_connectForm != null) _connectForm.Show();
         }
+
         private void MainClient_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (_connectForm != null)
-            {
-                _connectForm.Close(); // Đóng Form kết nối ngầm sẽ giải phóng toàn bộ RAM Client
-            }
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void panel1_Paint(object sender, PaintEventArgs e)
-        {
-
+            SocketClient.Instance.Disconnect();
+            if (_connectForm != null) _connectForm.Close();
         }
     }
 }

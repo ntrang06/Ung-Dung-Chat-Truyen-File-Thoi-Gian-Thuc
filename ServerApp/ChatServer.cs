@@ -62,13 +62,14 @@ namespace ServerApp
             // Duyệt qua tất cả các Client đang online để gửi tin nhắn của Server tới toàn bộ các máy
             lock (SocketServer.Instance.ConnectedClients)
             {
-                foreach (var client in SocketServer.Instance.ConnectedClients)
+                foreach (var clientInfo in SocketServer.Instance.ConnectedClients)
                 {
-                    if (client.Connected)
+                    // ĐÃ SỬA: Đổi client thành clientInfo ở vế sau
+                    if (clientInfo.Socket != null && clientInfo.Socket.Connected)
                     {
                         try
                         {
-                            NetworkStream stream = client.GetStream();
+                            NetworkStream stream = clientInfo.Socket.GetStream();
                             stream.Write(data, 0, data.Length);
                             splitSend = true;
                         }

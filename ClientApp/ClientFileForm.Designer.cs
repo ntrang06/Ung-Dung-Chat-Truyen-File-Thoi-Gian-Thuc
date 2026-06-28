@@ -47,9 +47,9 @@
             // 
             this.label1.Font = new System.Drawing.Font("Gill Sans Ultra Bold", 11F);
             this.label1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.label1.Location = new System.Drawing.Point(326, 63);
+            this.label1.Location = new System.Drawing.Point(367, 79);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(315, 37);
+            this.label1.Size = new System.Drawing.Size(354, 46);
             this.label1.TabIndex = 0;
             this.label1.Text = "HỆ THỐNG QUẢN LÝ FILE";
             // 
@@ -57,9 +57,10 @@
             // 
             this.btnBack.BackColor = System.Drawing.SystemColors.Info;
             this.btnBack.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F);
-            this.btnBack.Location = new System.Drawing.Point(11, 10);
+            this.btnBack.Location = new System.Drawing.Point(12, 12);
+            this.btnBack.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnBack.Name = "btnBack";
-            this.btnBack.Size = new System.Drawing.Size(97, 42);
+            this.btnBack.Size = new System.Drawing.Size(109, 52);
             this.btnBack.TabIndex = 1;
             this.btnBack.Text = "Quay lại";
             this.btnBack.UseVisualStyleBackColor = false;
@@ -69,9 +70,10 @@
             this.btnBrowse.BackColor = System.Drawing.SystemColors.Info;
             this.btnBrowse.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBrowse.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btnBrowse.Location = new System.Drawing.Point(63, 165);
+            this.btnBrowse.Location = new System.Drawing.Point(71, 206);
+            this.btnBrowse.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(57, 35);
+            this.btnBrowse.Size = new System.Drawing.Size(64, 44);
             this.btnBrowse.TabIndex = 15;
             this.btnBrowse.Text = ". . .";
             this.btnBrowse.UseVisualStyleBackColor = false;
@@ -79,11 +81,11 @@
             // 
             // txtPath
             // 
-            this.txtPath.Location = new System.Drawing.Point(143, 174);
+            this.txtPath.Location = new System.Drawing.Point(161, 218);
             this.txtPath.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txtPath.Name = "txtPath";
             this.txtPath.ReadOnly = true;
-            this.txtPath.Size = new System.Drawing.Size(737, 22);
+            this.txtPath.Size = new System.Drawing.Size(829, 26);
             this.txtPath.TabIndex = 3;
             // 
             // lvFile
@@ -95,9 +97,10 @@
             this.lvFile.FullRowSelect = true;
             this.lvFile.GridLines = true;
             this.lvFile.HideSelection = false;
-            this.lvFile.Location = new System.Drawing.Point(63, 219);
+            this.lvFile.Location = new System.Drawing.Point(71, 274);
+            this.lvFile.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.lvFile.Name = "lvFile";
-            this.lvFile.Size = new System.Drawing.Size(817, 123);
+            this.lvFile.Size = new System.Drawing.Size(919, 153);
             this.lvFile.TabIndex = 4;
             this.lvFile.UseCompatibleStateImageBehavior = false;
             this.lvFile.View = System.Windows.Forms.View.Details;
@@ -120,9 +123,10 @@
             // btnUpload
             // 
             this.btnUpload.BackColor = System.Drawing.Color.Tomato;
-            this.btnUpload.Location = new System.Drawing.Point(63, 444);
+            this.btnUpload.Location = new System.Drawing.Point(71, 555);
+            this.btnUpload.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnUpload.Name = "btnUpload";
-            this.btnUpload.Size = new System.Drawing.Size(109, 46);
+            this.btnUpload.Size = new System.Drawing.Size(123, 58);
             this.btnUpload.TabIndex = 5;
             this.btnUpload.Text = "Upload";
             this.btnUpload.UseVisualStyleBackColor = false;
@@ -131,9 +135,10 @@
             // btnDownload
             // 
             this.btnDownload.BackColor = System.Drawing.Color.Tomato;
-            this.btnDownload.Location = new System.Drawing.Point(404, 444);
+            this.btnDownload.Location = new System.Drawing.Point(454, 555);
+            this.btnDownload.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnDownload.Name = "btnDownload";
-            this.btnDownload.Size = new System.Drawing.Size(102, 46);
+            this.btnDownload.Size = new System.Drawing.Size(115, 58);
             this.btnDownload.TabIndex = 6;
             this.btnDownload.Text = "Download";
             this.btnDownload.UseVisualStyleBackColor = false;
@@ -141,9 +146,10 @@
             // btnRefresh
             // 
             this.btnRefresh.BackColor = System.Drawing.Color.Tomato;
-            this.btnRefresh.Location = new System.Drawing.Point(768, 444);
+            this.btnRefresh.Location = new System.Drawing.Point(864, 555);
+            this.btnRefresh.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(112, 46);
+            this.btnRefresh.Size = new System.Drawing.Size(126, 58);
             this.btnRefresh.TabIndex = 7;
             this.btnRefresh.Text = "Làm mới";
             this.btnRefresh.UseVisualStyleBackColor = false;
@@ -153,9 +159,10 @@
             this.button1.BackColor = System.Drawing.SystemColors.Info;
             this.button1.Font = new System.Drawing.Font("Gill Sans Ultra Bold", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.button1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.button1.Location = new System.Drawing.Point(76, 375);
+            this.button1.Location = new System.Drawing.Point(86, 469);
+            this.button1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(786, 42);
+            this.button1.Size = new System.Drawing.Size(884, 52);
             this.button1.TabIndex = 16;
             this.button1.Text = "Tiến trình truyền file";
             this.button1.UseVisualStyleBackColor = false;
@@ -163,13 +170,14 @@
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
+            this.openFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialog1_FileOk);
             // 
             // ClientFileForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.LightGoldenrodYellow;
-            this.ClientSize = new System.Drawing.Size(955, 553);
+            this.ClientSize = new System.Drawing.Size(1074, 691);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.btnDownload);
@@ -179,6 +187,7 @@
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.btnBack);
             this.Controls.Add(this.label1);
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "ClientFileForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Quản lý File";

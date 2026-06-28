@@ -31,45 +31,29 @@ namespace ClientApp
             string portStr = txtPort.Text.Trim();
             string clientName = txtClientName.Text.Trim();
 
-            // Kiểm tra dữ liệu đầu vào
             if (string.IsNullOrEmpty(ip) || string.IsNullOrEmpty(portStr) || string.IsNullOrEmpty(clientName))
             {
-                MessageBox.Show("Vui lòng nhập đầy đủ Địa chỉ IP, Cổng và Tên người dùng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (!int.TryParse(portStr, out int port))
+            if (int.TryParse(portStr, out int port))
             {
-                MessageBox.Show("Cổng kết nối phải là ký tự số!", "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                // GỌI QUA SINGLETON TRUNG TÂM MỚI TẠO
+                bool isSuccess = SocketClient.Instance.Connect(ip, port, clientName);
+
+                if (isSuccess)
+                {
+                    MessageBox.Show("Kết nối tới Server thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.Hide();
+
+                    MainClient mainMenu = new MainClient(this);
+                    mainMenu.Show();
+                }
             }
-
-            try
+            else
             {
-                // Khởi tạo kết nối Socket tới Server
-                ClientSocket = new TcpClient();
-                ClientSocket.Connect(ip, port);
-
-                // Lưu lại tên người dùng vào biến static
-                ClientName = clientName;
-                NetworkStream stream = ClientSocket.GetStream();
-
-                // Gửi gói tin định danh kết nối sang cho Server
-                byte[] connectData = Encoding.UTF8.GetBytes($"CONNECT|{clientName}");
-                stream.Write(connectData, 0, connectData.Length);
-                stream.Flush(); // Đẩy dữ liệu đi ngay lập tức
-
-                MessageBox.Show("Kết nối tới Server thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                this.Hide(); // Ẩn Form kết nối hiện tại đi
-
-                // Tạo và hiển thị Form Menu chính của Client
-                MainClient mainMenu = new MainClient(this);
-                mainMenu.Show();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Không thể kết nối tới Server! Đảm bảo Server đã bật và mở đúng Port.\nChi tiết lỗi: {ex.Message}", "Lỗi kết nối", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ClientSocket = null;
+                MessageBox.Show("Port phải là số nguyên!");
             }
         }
 

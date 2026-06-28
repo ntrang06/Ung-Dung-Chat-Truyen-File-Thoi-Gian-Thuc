@@ -51,7 +51,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(528, 294);
             this.panel1.TabIndex = 0;
-            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // btnExit
             // 
@@ -76,7 +75,6 @@
             this.btnFile.TabIndex = 9;
             this.btnFile.Text = "Truyền File";
             this.btnFile.UseVisualStyleBackColor = false;
-            this.btnFile.Click += new System.EventHandler(this.button2_Click);
             // 
             // btnChat
             // 

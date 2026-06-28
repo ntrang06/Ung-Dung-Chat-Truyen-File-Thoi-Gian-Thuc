@@ -45,11 +45,11 @@ namespace ServerApp
             {
                 foreach (var client in SocketServer.Instance.ConnectedClients)
                 {
-                    if (client.Connected)
+                    if (client.Socket != null && client.Socket.Connected)
                     {
                         try
                         {
-                            NetworkStream stream = client.GetStream();
+                            NetworkStream stream = client.Socket.GetStream();
                             stream.Write(requestData, 0, requestData.Length);
                             break; // Gửi lệnh tới máy Client đầu tiên đang online để tương tác quản lý
                         }
@@ -176,11 +176,11 @@ namespace ServerApp
             {
                 foreach (var client in SocketServer.Instance.ConnectedClients)
                 {
-                    if (client.Connected)
+                    if (client.Socket != null && client.Socket.Connected)
                     {
                         try
                         {
-                            NetworkStream stream = client.GetStream();
+                            NetworkStream stream = client.Socket.GetStream();
                             stream.Write(downloadCmd, 0, downloadCmd.Length);
                             sent = true;
                             break;
@@ -224,13 +224,14 @@ namespace ServerApp
                 {
                     foreach (var client in SocketServer.Instance.ConnectedClients)
                     {
-                        if (client.Connected)
+                        if (client.Socket != null && client.Socket.Connected)
                         {
                             try
                             {
-                                NetworkStream stream = client.GetStream();
+                                // ĐÃ SỬA: Thêm .Socket vào dòng này
+                                NetworkStream stream = client.Socket.GetStream();
                                 stream.Write(deleteCmd, 0, deleteCmd.Length);
-                                MessageBox.Show($"Đã phát lệnh yêu cầu xóa [{targetName}] tới máy con thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                MessageBox.Show($"Đã phát lệnh yêu cầu xóa [{targetName}] tới máy con thành công");
 
                                 // Tự động kích hoạt quét lại thư mục hiện tại sau khi xóa để cập nhật UI
                                 RequestClientFiles(txtCurrentPath.Text);

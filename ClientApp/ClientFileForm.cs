@@ -40,5 +40,10 @@ namespace ClientApp
 
             MessageBox.Show("Đã chọn file:\n" + txtPath.Text);
         }
+
+        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+
+        }
     }
 }
