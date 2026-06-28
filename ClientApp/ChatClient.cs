@@ -93,7 +93,8 @@ namespace ClientApp
 
                     // BƯỚC B: Gửi độ dài tên file (4 bytes) và Tên file
                     byte[] nameBytes = Encoding.UTF8.GetBytes(fileName);
-                    stream.Write(BitConverter.GetBytes(nameBytes.Length), 0, 4);
+                    long fileSize = fileData.LongLength;
+                    stream.Write(BitConverter.GetBytes(fileSize), 0, 8);
                     stream.Write(nameBytes, 0, nameBytes.Length);
 
                     // BƯỚC C: Gửi kích thước dữ liệu file (4 bytes) và Toàn bộ ruột file
@@ -110,6 +111,21 @@ namespace ClientApp
                 }
             }
         }
+        private void ReadFull(byte[] buffer, int size)
+        {
+            int offset = 0;
+
+            while (offset < size)
+            {
+                int read = stream.Read(buffer, offset, size - offset);
+
+                if (read == 0)
+                    throw new Exception("Mất kết nối.");
+
+                offset += read;
+            }
+        }
+
 
         // 4. THÊM MỚI LUỒNG NHẬN DỮ LIỆU TỰ ĐỘNG THỜI GIAN THỰC từ Server đổ về
         private void ReceiveData()
@@ -177,6 +193,7 @@ namespace ClientApp
                 }));
             }
         }
+
 
         private void label1_Click(object sender, EventArgs e)
         {

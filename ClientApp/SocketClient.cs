@@ -145,5 +145,10 @@ namespace ClientApp
                 System.Diagnostics.Debug.WriteLine($"Lỗi gửi dữ liệu: {ex.Message}");
             }
         }
+
+        public NetworkStream GetStream()
+        {
+            return _stream;
+        }
     }
 }
