@@ -12,6 +12,8 @@ namespace ClientApp
         private static SocketClient _instance;
         public static SocketClient Instance => _instance ?? (_instance = new SocketClient());
 
+        public TcpClient Client => _socket;
+
         private TcpClient _socket;
         private NetworkStream _stream;
         private bool _isConnected = false;
