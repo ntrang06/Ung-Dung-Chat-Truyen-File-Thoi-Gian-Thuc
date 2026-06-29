@@ -129,18 +129,19 @@ namespace ServerApp
                             // Khôi phục lại trạng thái chờ vô hạn cho các gói tin Chat/File sau đó
                             client.ReceiveTimeout = 0;
 
-                            // Tạo đối tượng ClientInfo và nạp vào danh sách quản lý
+                            // Tạo đối tượng ClientInfo
                             ClientInfo clientInfo = new ClientInfo(client, clientName);
+
                             lock (ConnectedClients)
                             {
                                 ConnectedClients.Add(clientInfo);
                             }
 
-                            // Cập nhật danh sách hiển thị lên giao diện UI
                             OnClientListChanged?.Invoke();
 
-                            // Chuyển tiếp sang hàm xử lý nhận tin nhắn và nhận file trường kỳ
-                            HandleClientComm(clientInfo);
+                            // Dùng ClientHandler để xử lý Chat + Upload File
+                            ClientHandler handler = new ClientHandler(client, this);
+                            handler.Process();
                         }
                         catch (Exception ex)
                         {
@@ -164,83 +165,101 @@ namespace ServerApp
         {
             TcpClient client = clientInfo.Socket;
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-
-            IPEndPoint ipEnd = (IPEndPoint)client.Client.RemoteEndPoint;
 
             while (_isRunning && client.Connected)
             {
                 try
                 {
-                    bytesRead = stream.Read(buffer, 0, buffer.Length);
-                }
-                catch
-                {
-                    break;
-                }
+                    int cmd = stream.ReadByte();
 
-                if (bytesRead == 0) break;
+                    if (cmd == -1)
+                        break;
 
-                string rawData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                MessageBox.Show(rawData, "Server nhận được");
-
-                // 1. XỬ LÝ NHẬN TIN CHAT TỪ CLIENT
-                if (rawData.StartsWith("CHAT|"))
-                {
-                    string chatMessage = rawData.Substring(5);
-                    string displayName = (clientInfo != null) ? clientInfo.Name : "Client";
-                    string displayIP = (ipEnd != null) ? ipEnd.Address.ToString() : "Unknown";
-                    string time = DateTime.Now.ToString("HH:mm:ss");
-                    string fullMessage =
-                        $"[{time}] [{displayName} - {displayIP}]:{Environment.NewLine}{chatMessage}";
-                    MessageBox.Show(fullMessage);
-                    // Hiển thị trên Server
-                    OnChatReceived?.Invoke(fullMessage);
-
-                    // Gửi cho tất cả Client
-                    BroadcastMessage(fullMessage);
-                }
-                // 2. XỬ LÝ NHẬN FILE TỪ CLIENT
-                else if (rawData.StartsWith("FILE_STREAM|"))
-                {
-                    try
+                    //-----------------------------------
+                    // CHAT
+                    //-----------------------------------
+                    if (cmd == 0x01)
                     {
-                        string[] fileParts = rawData.Split('|');
-                        string fileName = fileParts[1];
-                        int fileSize = int.Parse(fileParts[2]);
+                        byte[] lenBuffer = new byte[4];
+                        stream.Read(lenBuffer, 0, 4);
 
-                        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                        string savePath = Path.Combine(desktopPath, fileName);
+                        int msgLength = BitConverter.ToInt32(lenBuffer, 0);
 
-                        string fullHeader = $"FILE_STREAM|{fileName}|{fileSize}|";
-                        int headerLength = Encoding.UTF8.GetByteCount(fullHeader);
+                        byte[] msgBuffer = new byte[msgLength];
 
-                        using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write))
+                        int received = 0;
+
+                        while (received < msgLength)
                         {
-                            int firstChunkSize = bytesRead - headerLength;
-                            if (firstChunkSize > 0)
-                            {
-                                fs.Write(buffer, headerLength, firstChunkSize);
-                            }
+                            int read = stream.Read(msgBuffer, received, msgLength - received);
 
-                            int totalBytesReceived = firstChunkSize;
-                            while (totalBytesReceived < fileSize)
-                            {
-                                int currentRead = stream.Read(buffer, 0, Math.Min(buffer.Length, fileSize - totalBytesReceived));
-                                if (currentRead == 0) break;
+                            received += read;
+                        }
 
-                                fs.Write(buffer, 0, currentRead);
-                                totalBytesReceived += currentRead;
+                        string message = Encoding.UTF8.GetString(msgBuffer);
+
+                        OnChatReceived?.Invoke(message);
+
+                        BroadcastMessage(message);
+                    }
+
+                    //-----------------------------------
+                    // FILE
+                    //-----------------------------------
+                    else if (cmd == 0x02)
+                    {
+                        MessageBox.Show("Server nhận lệnh Upload");
+                        byte[] lenBuffer = new byte[4];
+                        stream.Read(lenBuffer, 0, 4);
+
+                        int nameLength = BitConverter.ToInt32(lenBuffer, 0);
+
+                        byte[] nameBuffer = new byte[nameLength];
+                        stream.Read(nameBuffer, 0, nameLength);
+
+                        string fileName = Encoding.UTF8.GetString(nameBuffer);
+                        MessageBox.Show(fileName);
+
+                        byte[] sizeBuffer = new byte[8];
+                        stream.Read(sizeBuffer, 0, 8);
+
+                        long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
+
+                        string savePath = Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                            fileName);
+                        MessageBox.Show(savePath);
+
+                        using (FileStream fs = new FileStream(savePath, FileMode.Create))
+                        {
+                            byte[] buffer = new byte[8192];
+
+                            long total = 0;
+
+                            while (total < fileSize)
+                            {
+                                int read = stream.Read(
+                                    buffer,
+                                    0,
+                                    (int)Math.Min(buffer.Length, fileSize - total));
+
+                                if (read == 0)
+                                    break;
+
+                                fs.Write(buffer, 0, read);
+
+                                total += read;
                             }
                         }
 
-                        OnFilesReceived?.Invoke($"[Hệ thống]: Đã nhận file '{fileName}' ({fileSize} bytes) từ Client {clientInfo.Name} lưu tại Desktop.");
+                        OnFilesReceived?.Invoke(
+                            $"Đã nhận file: {fileName}");
                     }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Lỗi bóc tách file: {ex.Message}");
-                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString());
+                    break;
                 }
             }
 
@@ -248,6 +267,7 @@ namespace ServerApp
             {
                 ConnectedClients.Remove(clientInfo);
             }
+
             OnClientListChanged?.Invoke();
         }
 
