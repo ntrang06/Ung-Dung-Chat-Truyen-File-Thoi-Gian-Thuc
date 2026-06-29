@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -25,7 +26,8 @@ namespace ClientApp
         public event Action<string> OnBuzzReceived;
         public event Action OnServerDisconnected;
         public event Action<string> OnCommandReceived;
-
+        public event Action<string> OnChatReceived;
+        public event Action<string> OnFileReceived;
         private SocketClient() { }
 
         // Hàm thực hiện kết nối tới Server
@@ -42,8 +44,8 @@ namespace ClientApp
                 byte[] connectData = Encoding.UTF8.GetBytes($"CONNECT|{clientName}\n");
                 _stream.Write(connectData, 0, connectData.Length);
                 _stream.Flush();
-
-
+                Task.Run(() => ListenToServer());
+                
 
                 return true;
             }
@@ -58,76 +60,72 @@ namespace ClientApp
         // Luồng chạy ngầm đọc dữ liệu xuyên suốt ứng dụng
         private void ListenToServer()
         {
-            byte[] buffer = new byte[8192];
-
             try
             {
-                while (_isConnected && _socket != null && _socket.Connected)
+                while (_isConnected && _socket.Connected)
                 {
-                    int bytesRead = _stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0)
-                    {
-                        HandleDisconnect();
+                    int header = _stream.ReadByte();
+
+                    if (header == -1)
                         break;
-                    }
 
-                    string receivedText = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    MessageBox.Show(receivedText);
-                    // Debug xem Server thực sự gửi gì
-                    System.Diagnostics.Debug.WriteLine("Server gửi: " + receivedText);
-
-                    if (receivedText.StartsWith("BUZZ|"))
+                    if (header == 0x01)
                     {
-                        string alertContent = receivedText.Substring(5);
+                        byte[] len = new byte[4];
+                        ReadFull(len, 4);
 
-                        if (Application.OpenForms.Count > 0)
-                        {
-                            Application.OpenForms[0].Invoke(new MethodInvoker(() =>
-                            {
-                                MessageBox.Show(alertContent,
-                                    "CẢNH BÁO TỪ HỆ THỐNG",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Warning);
-                            }));
-                        }
+                        int msgLen = BitConverter.ToInt32(len, 0);
 
-                        OnBuzzReceived?.Invoke(alertContent);
+                        byte[] data = new byte[msgLen];
+                        ReadFull(data, msgLen);
+
+                        string msg = Encoding.UTF8.GetString(data);
+
+                        OnChatReceived?.Invoke(msg);
                     }
-                    else if (receivedText.StartsWith("DELETE_FILE|"))
+                    else if (header == 0x02)
                     {
-                        OnCommandReceived?.Invoke(receivedText);
-                        string path = receivedText.Substring("DELETE_FILE|".Length);
+                        byte[] nameLen = new byte[4];
+                        ReadFull(nameLen, 4);
 
-                        try
-                        {
-                            if (System.IO.File.Exists(path))
-                            {
-                                System.IO.File.Delete(path);
+                        int lenName = BitConverter.ToInt32(nameLen, 0);
 
-                                MessageBox.Show("Đã xóa file:\n" + path);
-                            }
-                            else if (System.IO.Directory.Exists(path))
-                            {
-                                System.IO.Directory.Delete(path, true);
+                        byte[] nameBytes = new byte[lenName];
+                        ReadFull(nameBytes, lenName);
 
-                                MessageBox.Show("Đã xóa thư mục:\n" + path);
-                            }
-                            else
-                            {
-                                MessageBox.Show("Không tồn tại:\n" + path);
-                            }
+                        string fileName = Encoding.UTF8.GetString(nameBytes);
 
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show(ex.Message);
-                        }
+                        byte[] sizeBytes = new byte[8];
+                        ReadFull(sizeBytes, 8);
+
+                        long fileSize = BitConverter.ToInt64(sizeBytes, 0);
+
+                        byte[] fileData = new byte[fileSize];
+                        ReadFull(fileData, (int)fileSize);
+
+                        File.WriteAllBytes(fileName, fileData);
+
+                        OnFileReceived?.Invoke(fileName);
                     }
                 }
             }
             catch
             {
                 HandleDisconnect();
+            }
+        }
+        private void ReadFull(byte[] buffer, int size)
+        {
+            int offset = 0;
+
+            while (offset < size)
+            {
+                int read = _stream.Read(buffer, offset, size - offset);
+
+                if (read == 0)
+                    throw new Exception();
+
+                offset += read;
             }
         }
 
@@ -141,13 +139,21 @@ namespace ClientApp
             // Hiển thị thông báo ép buộc dù đang ở bất kỳ giao diện nào
             if (Application.OpenForms.Count > 0)
             {
-                Application.OpenForms[0].Invoke(new MethodInvoker(() =>
-                {
-                    MessageBox.Show("Mất kết nối tới Server! Ứng dụng sẽ tự động quay về màn hình đăng nhập.", "Thông báo ngắt kết nối", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Form frm = Application.OpenForms[0];
 
-                    // Code tự động dọn dẹp và bật lại Form Đăng nhập ban đầu nếu muốn
-                    Application.Restart();
-                }));
+                if (frm.IsHandleCreated)
+                {
+                    frm.BeginInvoke(new MethodInvoker(() =>
+                    {
+                        MessageBox.Show(
+                            "Mất kết nối tới Server! Ứng dụng sẽ tự động quay về màn hình đăng nhập.",
+                            "Thông báo ngắt kết nối",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+
+                        Application.Restart();
+                    }));
+                }
             }
 
             OnServerDisconnected?.Invoke();
@@ -175,7 +181,7 @@ namespace ClientApp
 
                 _stream.Write(data, 0, data.Length);
                 _stream.Flush();
-                MessageBox.Show("Đã gửi: " + text);
+                
             }
             catch (Exception ex)
             {

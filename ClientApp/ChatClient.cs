@@ -34,18 +34,18 @@ namespace ClientApp
         // 2. Lấy kết nối từ SocketClient.Instance khi Form bắt đầu tải lên
         private void lstChat_Load(object sender, EventArgs e)
         {
+            SocketClient.Instance.OnChatReceived += Socket_OnChatReceived;
+            SocketClient.Instance.OnFileReceived += Socket_OnFileReceived;
             try
             {
                 // Lấy trực tiếp kết nối TCP thực tế từ SocketClient thông qua thuộc tính đã sửa ở Bước 1
                 this.client = SocketClient.Instance.Client;
 
+
+
                 if (this.client != null && this.client.Connected)
                 {
                     this.stream = this.client.GetStream();
-
-                    receiveThread = new Thread(ReceiveData);
-                    receiveThread.IsBackground = true;
-                    receiveThread.Start();
                 }
                 else
                 {
@@ -56,6 +56,27 @@ namespace ClientApp
             {
                 MessageBox.Show("Không thể lấy luồng mạng: " + ex.Message);
             }
+        }
+        private void Socket_OnChatReceived(string msg)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => Socket_OnChatReceived(msg)));
+                return;
+            }
+
+            txtChatHistory.AppendText(msg + Environment.NewLine + Environment.NewLine);
+        }
+
+        private void Socket_OnFileReceived(string file)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => Socket_OnFileReceived(file)));
+                return;
+            }
+
+            txtChatHistory.AppendText("📥 Đã nhận file: " + file + Environment.NewLine);
         }
         private void btnBackToMenu_Click(object sender, EventArgs e)
         {
@@ -78,22 +99,22 @@ namespace ClientApp
                 }
 
                 string message = txtMessage.Text.Trim();
-                if (string.IsNullOrEmpty(message)) return;
+                
+                if (string.IsNullOrEmpty(message))
+                    return;
 
-                string formattedMessage = "CHAT|" + message;
-                byte[] msgBytes = Encoding.UTF8.GetBytes(formattedMessage);
+                // Đóng gói đúng giao thức
+                byte[] msgBytes = Encoding.UTF8.GetBytes(message);
+                byte[] lenBytes = BitConverter.GetBytes(msgBytes.Length);
 
-              
-                SocketClient.Instance.SendData("CHAT|" + message);
-
-                // 4. Hiển thị lên màn hình chat của chính mình (Client)
-                string time = DateTime.Now.ToString("HH:mm:ss");
-
-                //txtChatHistory.AppendText(
-                //    $"[{time}] [Bạn]:{Environment.NewLine}{message}{Environment.NewLine}{Environment.NewLine}");
+                stream.WriteByte(0x01);
+                stream.Write(lenBytes, 0, 4);
+                stream.Write(msgBytes, 0, msgBytes.Length);
+                stream.Flush();
 
                 txtMessage.Clear();
                 txtMessage.Focus();
+
             }
             catch (Exception ex)
             {
@@ -143,84 +164,6 @@ namespace ClientApp
                 MessageBox.Show("Lỗi gửi file: " + ex.Message);
             }
         }
-
-        // Hàm đảm bảo đọc đủ số lượng Byte được yêu cầu trên đường truyền mạng
-        private void ReadFull(byte[] buffer, int size)
-        {
-            int offset = 0;
-            while (offset < size)
-            {
-                int read = stream.Read(buffer, offset, size - offset);
-                if (read == 0)
-                    throw new Exception("Mất kết nối.");
-                offset += read;
-            }
-        }
-
-        // 4. LUỒNG NHẬN DỮ LIỆU TỰ ĐỘNG THỜI GIAN THỰC (Đã sửa lỗi đồng bộ đọc luồng)
-        private void ReceiveData()
-        {
-            try
-            {
-                while (client != null && client.Connected)
-                {
-                    int header = stream.ReadByte();
-                    if (header == -1) break; // Server ngắt kết nối
-
-                    if (header == 0x01) // TRƯỜNG HỢP 1: Nhận tin nhắn Text từ Server
-                    {
-                        byte[] lengthBytes = new byte[4];
-                        ReadFull(lengthBytes, 4);
-                        int msgLen = BitConverter.ToInt32(lengthBytes, 0);
-
-                        byte[] msgBytes = new byte[msgLen];
-                        ReadFull(msgBytes, msgLen);
-                        string msg = Encoding.UTF8.GetString(msgBytes);
-                        
-                        Invoke(new Action(() => {
-                            txtChatHistory.AppendText(msg + Environment.NewLine + Environment.NewLine);
-                        }));
-                    }
-                    else if (header == 0x02) // TRƯỜNG HỢP 2: Nhận File từ Server gửi qua
-                    {
-                        // Đọc tên File
-                        byte[] nameLenBytes = new byte[4];
-                        ReadFull(nameLenBytes, 4);
-                        int nameLen = BitConverter.ToInt32(nameLenBytes, 0);
-
-                        byte[] nameBytes = new byte[nameLen];
-                        ReadFull(nameBytes, nameLen);
-                        string fileName = Encoding.UTF8.GetString(nameBytes);
-
-                        // Đọc kích thước file
-                        byte[] sizeBytes = new byte[8];
-                        ReadFull(sizeBytes, 8);
-                        long fileSize = BitConverter.ToInt64(sizeBytes, 0);
-
-                        // Đọc nội dung dữ liệu file
-                        byte[] fileBytes = new byte[fileSize];
-                        ReadFull(fileBytes, (int)fileSize);
-
-                        // Lưu file vào thư mục thực thi của ứng dụng
-                        File.WriteAllBytes(fileName, fileBytes);
-
-                        Invoke(new Action(() => {;
-                            txtChatHistory.AppendText("📥 Đã nhận file: " + fileName + Environment.NewLine);
-                        }));
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                if (client != null && client.Connected)
-                {
-                    Invoke(new Action(() => {
-                        txtChatHistory.AppendText("⚠️ Đã xảy ra lỗi khi nhận dữ liệu." + Environment.NewLine);
-                    }));
-                }
-            }
-        }
-
         // Đảm bảo đóng kết nối an toàn khi người dùng tắt Form chat
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
@@ -230,8 +173,6 @@ namespace ClientApp
             // client?.Close();
             base.OnFormClosing(e);
         }
-
-        // Các hàm sự kiện click trống có thể giữ lại để tránh lỗi Designer
         private void label1_Click(object sender, EventArgs e) { }
         private void label4_Click(object sender, EventArgs e) { }
         private void txtMessage_TextChanged(object sender, EventArgs e) { }

@@ -1,37 +1,90 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
 using System.Net.Sockets;
 
 namespace ServerApp
 {
     public class ClientInfo
     {
-        // Lưu giữ kết nối mạng của máy đó
+        // Socket kết nối
         public TcpClient Socket { get; set; }
 
-        // Lưu giữ tên người dùng (bsd, dac, fadv...)
+        // Tên Client
         public string Name { get; set; }
 
-        // Lưu giữ thời điểm máy này kết nối vào Server
-        public DateTime LoginTime { get; set; } = DateTime.Now; // Tự động lấy thời gian lúc kết nối
+        // Thời gian kết nối
+        public DateTime LoginTime { get; set; }
 
-        // Hàm khởi tạo (Constructor) để nạp dữ liệu nhanh
+        // Luồng mạng
+        public NetworkStream Stream
+        {
+            get
+            {
+                if (Socket != null && Socket.Connected)
+                    return Socket.GetStream();
+
+                return null;
+            }
+        }
+
+        // Địa chỉ IP
+        public string IP
+        {
+            get
+            {
+                if (Socket != null && Socket.Connected)
+                {
+                    return ((IPEndPoint)Socket.Client.RemoteEndPoint).Address.ToString();
+                }
+
+                return "Unknown";
+            }
+        }
+
+        // Port
+        public int Port
+        {
+            get
+            {
+                if (Socket != null && Socket.Connected)
+                {
+                    return ((IPEndPoint)Socket.Client.RemoteEndPoint).Port;
+                }
+
+                return 0;
+            }
+        }
+
         public ClientInfo(TcpClient socket, string name)
         {
-            this.Socket = socket;
-            this.Name = name;
-            this.LoginTime = DateTime.Now;
+            Socket = socket;
+            Name = name;
+            LoginTime = DateTime.Now;
         }
+
+        // Đóng kết nối
+        public void Close()
+        {
+            try
+            {
+                Stream?.Close();
+            }
+            catch { }
+
+            try
+            {
+                Socket?.Close();
+            }
+            catch { }
+        }
+
         public override string ToString()
         {
-            if (this.Socket != null && this.Socket.Connected)
+            if (Socket != null && Socket.Connected)
             {
-                var ipEnd = (System.Net.IPEndPoint)this.Socket.Client.RemoteEndPoint;
-                return $"{Name} ({ipEnd.Address}:{ipEnd.Port})";
+                return $"{Name} ({IP}:{Port})";
             }
+
             return $"{Name} (Offline)";
         }
     }

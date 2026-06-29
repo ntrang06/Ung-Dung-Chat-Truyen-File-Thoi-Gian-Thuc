@@ -23,6 +23,11 @@ namespace ServerApp
         public event Action OnClientListChanged;
         public event Action<string> OnChatReceived;
         public event Action<string> OnFilesReceived;
+        public event Action<string> OnLogReceived;
+        public event Action<string> OnClientConnected;
+        public event Action<string> OnClientDisconnected;
+        public event Action<int> OnProgressUpdated;
+        public event Action<string, string, string> OnFileReceived;
 
         // Singleton Pattern để mọi Form trong ServerApp đều dùng chung 1 kết nối Socket ngầm
         private static SocketServer _instance;
@@ -40,6 +45,7 @@ namespace ServerApp
             {
                 _listener = new TcpListener(IPAddress.Any, this._port);
                 _listener.Start();
+                OnLogReceived?.Invoke($"Máy chủ bắt đầu lắng nghe trên cổng {port}...");
                 _isRunning = true;
 
                 // Tạo một luồng chạy độc lập để tránh làm treo đơ giao diện Form chính
@@ -99,6 +105,10 @@ namespace ServerApp
                 try
                 {
                     TcpClient client = _listener.AcceptTcpClient();
+                    string ep = client.Client.RemoteEndPoint.ToString();
+
+                    OnLogReceived?.Invoke($"Client kết nối thành công: {ep}");
+                    OnClientConnected?.Invoke(ep);
 
                     // Tạo luồng độc lập xử lý quá trình bắt tay và đọc dữ liệu cho từng Client
                     // Việc này giúp Server không bị nghẽn ở luồng chính khi xử lý nhiều máy cùng lúc
@@ -161,7 +171,6 @@ namespace ServerApp
         // Hàm xử lý tương tác riêng biệt với từng máy Client
         private void HandleClientComm(ClientInfo clientInfo)
         {
-            MessageBox.Show("HandleClientComm chạy"); 
             TcpClient client = clientInfo.Socket;
             NetworkStream stream = client.GetStream();
 
@@ -180,26 +189,25 @@ namespace ServerApp
                     if (cmd == 0x01)
                     {
                         byte[] lenBuffer = new byte[4];
-                        stream.Read(lenBuffer, 0, 4);
+                        ReadFull(stream, lenBuffer, 4);
 
                         int msgLength = BitConverter.ToInt32(lenBuffer, 0);
 
                         byte[] msgBuffer = new byte[msgLength];
-
-                        int received = 0;
-
-                        while (received < msgLength)
-                        {
-                            int read = stream.Read(msgBuffer, received, msgLength - received);
-
-                            received += read;
-                        }
+                        ReadFull(stream, msgBuffer, msgLength);
 
                         string message = Encoding.UTF8.GetString(msgBuffer);
 
-                        OnChatReceived?.Invoke(message);
+                        IPEndPoint ip = (IPEndPoint)client.Client.RemoteEndPoint;
 
-                        BroadcastMessage(message);
+                        string fullMessage =
+                            $"[{DateTime.Now:HH:mm:ss}] [{clientInfo.Name} - {ip.Address}]:" +
+                            Environment.NewLine +
+                            message;
+
+                        OnChatReceived?.Invoke(fullMessage);
+
+                        BroadcastMessage(fullMessage);
                     }
 
                     //-----------------------------------
@@ -209,18 +217,17 @@ namespace ServerApp
                     {
                         MessageBox.Show("Server nhận lệnh Upload");
                         byte[] lenBuffer = new byte[4];
-                        stream.Read(lenBuffer, 0, 4);
+                        ReadFull(stream, lenBuffer, 4);
 
                         int nameLength = BitConverter.ToInt32(lenBuffer, 0);
 
                         byte[] nameBuffer = new byte[nameLength];
-                        stream.Read(nameBuffer, 0, nameLength);
+                        ReadFull(stream, nameBuffer, nameLength);
 
                         string fileName = Encoding.UTF8.GetString(nameBuffer);
-                        MessageBox.Show(fileName);
 
                         byte[] sizeBuffer = new byte[8];
-                        stream.Read(sizeBuffer, 0, 8);
+                        ReadFull(stream, sizeBuffer, 8);
 
                         long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
 
@@ -265,11 +272,28 @@ namespace ServerApp
             lock (ConnectedClients)
             {
                 ConnectedClients.Remove(clientInfo);
+                OnClientDisconnected?.Invoke(clientInfo.Socket.Client.RemoteEndPoint.ToString());
+
+OnLogReceived?.Invoke(
+    $"Client {clientInfo.Socket.Client.RemoteEndPoint} đã ngắt kết nối.");
             }
 
             OnClientListChanged?.Invoke();
         }
+        private void ReadFull(NetworkStream stream, byte[] buffer, int size)
+        {
+            int offset = 0;
 
+            while (offset < size)
+            {
+                int read = stream.Read(buffer, offset, size - offset);
+
+                if (read == 0)
+                    throw new Exception("Client disconnected");
+
+                offset += read;
+            }
+        }
         private void BroadcastMessage(string fullMessage)
         {
             byte[] messageBytes = Encoding.UTF8.GetBytes(fullMessage);
@@ -301,6 +325,35 @@ namespace ServerApp
                     {
                     }
                 }
+            }
+        }
+        public void SendFile(ClientInfo client, string filePath)
+        {
+            try
+            {
+                NetworkStream stream = client.Socket.GetStream();
+
+                byte[] fileData = File.ReadAllBytes(filePath);
+
+                string fileName = Path.GetFileName(filePath);
+
+                byte[] nameBytes = Encoding.UTF8.GetBytes(fileName);
+
+                stream.WriteByte(0x02);
+
+                stream.Write(BitConverter.GetBytes(nameBytes.Length), 0, 4);
+
+                stream.Write(nameBytes, 0, nameBytes.Length);
+
+                stream.Write(BitConverter.GetBytes((long)fileData.Length), 0, 8);
+
+                stream.Write(fileData, 0, fileData.Length);
+
+                stream.Flush();
+            }
+            catch
+            {
+
             }
         }
     }

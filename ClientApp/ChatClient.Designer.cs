@@ -30,7 +30,6 @@
         private void InitializeComponent()
         {
             this.btnSend = new System.Windows.Forms.Button();
-            this.btnSendFile = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.txtMessage = new System.Windows.Forms.TextBox();
             this.btnBackToMenu = new System.Windows.Forms.Button();
@@ -44,7 +43,7 @@
             this.btnSend.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnSend.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.btnSend.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F);
-            this.btnSend.Location = new System.Drawing.Point(448, 365);
+            this.btnSend.Location = new System.Drawing.Point(524, 348);
             this.btnSend.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(79, 36);
@@ -52,18 +51,6 @@
             this.btnSend.Text = "Gửi";
             this.btnSend.UseVisualStyleBackColor = false;
             this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
-            // 
-            // btnSendFile
-            // 
-            this.btnSendFile.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
-            this.btnSendFile.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSendFile.Location = new System.Drawing.Point(547, 365);
-            this.btnSendFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnSendFile.Name = "btnSendFile";
-            this.btnSendFile.Size = new System.Drawing.Size(98, 36);
-            this.btnSendFile.TabIndex = 9;
-            this.btnSendFile.Text = "Gửi File";
-            this.btnSendFile.UseVisualStyleBackColor = false;
             // 
             // label4
             // 
@@ -82,10 +69,10 @@
             // 
             this.txtMessage.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.txtMessage.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtMessage.Location = new System.Drawing.Point(23, 369);
+            this.txtMessage.Location = new System.Drawing.Point(12, 351);
             this.txtMessage.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txtMessage.Name = "txtMessage";
-            this.txtMessage.Size = new System.Drawing.Size(403, 32);
+            this.txtMessage.Size = new System.Drawing.Size(481, 32);
             this.txtMessage.TabIndex = 6;
             this.txtMessage.TextChanged += new System.EventHandler(this.txtMessage_TextChanged);
             // 
@@ -97,7 +84,7 @@
             this.btnBackToMenu.Location = new System.Drawing.Point(11, 11);
             this.btnBackToMenu.Margin = new System.Windows.Forms.Padding(2);
             this.btnBackToMenu.Name = "btnBackToMenu";
-            this.btnBackToMenu.Size = new System.Drawing.Size(118, 40);
+            this.btnBackToMenu.Size = new System.Drawing.Size(103, 40);
             this.btnBackToMenu.TabIndex = 13;
             this.btnBackToMenu.Text = "Quay lại";
             this.btnBackToMenu.UseVisualStyleBackColor = false;
@@ -111,11 +98,10 @@
             this.panel1.Controls.Add(this.txtMessage);
             this.panel1.Controls.Add(this.label4);
             this.panel1.Controls.Add(this.btnSend);
-            this.panel1.Controls.Add(this.btnSendFile);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(673, 453);
+            this.panel1.Size = new System.Drawing.Size(634, 401);
             this.panel1.TabIndex = 14;
             // 
             // txtChatHistory
@@ -126,7 +112,7 @@
             this.txtChatHistory.Name = "txtChatHistory";
             this.txtChatHistory.ReadOnly = true;
             this.txtChatHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtChatHistory.Size = new System.Drawing.Size(649, 255);
+            this.txtChatHistory.Size = new System.Drawing.Size(606, 247);
             this.txtChatHistory.TabIndex = 14;
             // 
             // lstChat
@@ -134,7 +120,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.ClientSize = new System.Drawing.Size(673, 453);
+            this.ClientSize = new System.Drawing.Size(634, 401);
             this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -149,7 +135,6 @@
 
         #endregion
         private System.Windows.Forms.Button btnSend;
-        private System.Windows.Forms.Button btnSendFile;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtMessage;
         private System.Windows.Forms.Button btnBackToMenu;

@@ -94,8 +94,7 @@ namespace ServerApp
                 // Hiển thị tin nhắn chính mình vừa gửi lên Khung lịch sử chat
                 //string time = DateTime.Now.ToString("HH:mm:ss");
 
-                txtChatHistory.AppendText(
-                    $"[{time}] [Server]:{Environment.NewLine}{msgToSend}{Environment.NewLine}{Environment.NewLine}");
+                txtChatHistory.AppendText(msgToSend + Environment.NewLine + Environment.NewLine); 
                 txtInput.Clear(); 
                 txtInput.Focus();
             }
