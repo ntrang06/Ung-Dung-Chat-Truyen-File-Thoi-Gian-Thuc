@@ -137,11 +137,7 @@ namespace ServerApp
                                 ConnectedClients.Add(clientInfo);
                             }
 
-                            OnClientListChanged?.Invoke();
-
-                            // Dùng ClientHandler để xử lý Chat + Upload File
-                            ClientHandler handler = new ClientHandler(client, this);
-                            handler.Process();
+                            OnClientListChanged?.Invoke();    
                         }
                         catch (Exception ex)
                         {
