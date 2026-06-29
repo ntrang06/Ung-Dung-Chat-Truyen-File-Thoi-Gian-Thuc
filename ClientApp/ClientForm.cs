@@ -19,8 +19,8 @@ namespace ClientApp
         private void ClientForm_Load(object sender, EventArgs e)
         {
             this.StartPosition = FormStartPosition.CenterScreen;
-            txtIP.Text = ""; // Gợi ý sẵn IP cục bộ để test cho nhanh
-            txtPort.Text = "";    // Gợi ý sẵn Port
+            txtIP.Text = "127.0.0.1"; // Gợi ý sẵn IP cục bộ để test cho nhanh
+            txtPort.Text = "9999";    // Gợi ý sẵn Port
             txtClientName.Text = "";
         }
 

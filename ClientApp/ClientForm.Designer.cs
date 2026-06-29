@@ -130,6 +130,7 @@
             this.txtPort.Name = "txtPort";
             this.txtPort.Size = new System.Drawing.Size(272, 32);
             this.txtPort.TabIndex = 1;
+            this.txtPort.Text = "9999";
             // 
             // txtIP
             // 
@@ -139,6 +140,7 @@
             this.txtIP.Name = "txtIP";
             this.txtIP.Size = new System.Drawing.Size(294, 32);
             this.txtIP.TabIndex = 0;
+            this.txtIP.Text = "127.0.0.1";
             // 
             // ClientForm
             // 

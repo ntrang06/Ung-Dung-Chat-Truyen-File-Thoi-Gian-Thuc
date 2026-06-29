@@ -32,7 +32,9 @@ namespace ClientApp
         // ================= Chat =================
         private void btnChat_Click(object sender, EventArgs e)
         {
-            lstChat chat = new lstChat();
+            lstChat chat = new lstChat(this);
+
+            this.Hide(); // <-- THÊM ĐÚNG DÒNG NÀY: Ẩn Menu chính đi ngay khi bấm nút
             chat.ShowDialog();
         }
 
@@ -41,6 +43,9 @@ namespace ClientApp
         {
             ClientFileForm file = new ClientFileForm();
             file.ShowDialog();
+            this.Hide();
+            file.ShowDialog();
+            this.Show();
         }
 
         // ================= Thoát =================
@@ -67,7 +72,10 @@ namespace ClientApp
 
         private void btnChat_Click_1(object sender, EventArgs e)
         {
-           
+            lstChat chat = new lstChat();
+
+            this.Hide();
+            chat.ShowDialog();
+            this.Show();
         }
     }
-}
