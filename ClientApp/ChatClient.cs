@@ -18,16 +18,17 @@ namespace ClientApp
         private TcpClient client;
         private NetworkStream stream;
         private Thread receiveThread;
-        private object _mainMenu;
+        private MainClient _mainMenu;
 
         // 1. QUAN TRỌNG: Giữ hàm khởi tạo KHÔNG THAM SỐ để đúng với thiết kế và gọi từ MainClient
         public lstChat(MainClient mainClient)
         {
-            InitializeComponent(); // Nạp đầy đủ các nút bấm, RichTextBox lên giao diện
+            InitializeComponent();
+            this._mainMenu = mainClient;
         }
-
         public lstChat()
         {
+            InitializeComponent();
         }
 
         // 2. Lấy kết nối từ SocketClient.Instance khi Form bắt đầu tải lên
@@ -42,14 +43,13 @@ namespace ClientApp
                 {
                     this.stream = this.client.GetStream();
 
-                    // Giữ nguyên luồng nhận dữ liệu tự động của bạn
                     receiveThread = new Thread(ReceiveData);
                     receiveThread.IsBackground = true;
                     receiveThread.Start();
                 }
                 else
                 {
-                    rtbMessages.AppendText("⚠️ Lỗi: Chưa kết nối đến Server!" + Environment.NewLine);
+                    txtChatHistory.AppendText("⚠️ Lỗi: Chưa kết nối đến Server!" + Environment.NewLine);
                 }
             }
             catch (Exception ex)
@@ -61,10 +61,7 @@ namespace ClientApp
         {
             if (_mainMenu != null)
             {
-                if (_mainMenu is MainClient menu)
-                {
-                    menu.Show();
-                }
+                _mainMenu.Show();
             }
             this.Close();
         }
@@ -74,25 +71,33 @@ namespace ClientApp
         {
             try
             {
-                if (stream == null) return;
+                if (stream == null)
+                {
+                    txtChatHistory.AppendText("⚠️ Lỗi: Chưa lấy được luồng mạng Stream!" + Environment.NewLine);
+                    return;
+                }
 
                 string message = txtMessage.Text.Trim();
                 if (string.IsNullOrEmpty(message)) return;
 
-                byte[] msgBytes = Encoding.UTF8.GetBytes(message);
-                byte[] lengthBytes = BitConverter.GetBytes(msgBytes.Length);
+                string formattedMessage = "CHAT|" + message;
+                byte[] msgBytes = Encoding.UTF8.GetBytes(formattedMessage);
 
-                stream.WriteByte(0x01); // Cờ hiệu nhận diện TIN NHẮN TEXT
-                stream.Write(lengthBytes, 0, 4);
-                stream.Write(msgBytes, 0, msgBytes.Length);
-                stream.Flush();
+              
+                SocketClient.Instance.SendData("CHAT|" + message);
 
-                rtbMessages.AppendText("Bạn: " + message + Environment.NewLine);
+                // 4. Hiển thị lên màn hình chat của chính mình (Client)
+                string time = DateTime.Now.ToString("HH:mm:ss");
+
+                //txtChatHistory.AppendText(
+                //    $"[{time}] [Bạn]:{Environment.NewLine}{message}{Environment.NewLine}{Environment.NewLine}");
+
                 txtMessage.Clear();
+                txtMessage.Focus();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi gửi tin nhắn: " + ex.Message);
+                MessageBox.Show("Lỗi gửi tin nhắn từ Client: " + ex.Message);
             }
         }
 
@@ -131,7 +136,7 @@ namespace ClientApp
                 stream.Write(fileData, 0, fileData.Length);
                 stream.Flush();
 
-                rtbMessages.AppendText("📤 Đã gửi file: " + fileName + Environment.NewLine);
+                txtChatHistory.AppendText("📤 Đã gửi file: " + fileName + Environment.NewLine);
             }
             catch (Exception ex)
             {
@@ -165,15 +170,15 @@ namespace ClientApp
                     if (header == 0x01) // TRƯỜNG HỢP 1: Nhận tin nhắn Text từ Server
                     {
                         byte[] lengthBytes = new byte[4];
-                        ReadFull(lengthBytes, 4); // Sửa: Dùng ReadFull thay vì stream.Read để tránh mất gói
+                        ReadFull(lengthBytes, 4);
                         int msgLen = BitConverter.ToInt32(lengthBytes, 0);
 
                         byte[] msgBytes = new byte[msgLen];
-                        ReadFull(msgBytes, msgLen); // Sửa: Dùng ReadFull đọc trọn vẹn nội dung text
+                        ReadFull(msgBytes, msgLen);
                         string msg = Encoding.UTF8.GetString(msgBytes);
-
+                        
                         Invoke(new Action(() => {
-                            rtbMessages.AppendText("Server: " + msg + Environment.NewLine);
+                            txtChatHistory.AppendText(msg + Environment.NewLine + Environment.NewLine);
                         }));
                     }
                     else if (header == 0x02) // TRƯỜNG HỢP 2: Nhận File từ Server gửi qua
@@ -199,9 +204,8 @@ namespace ClientApp
                         // Lưu file vào thư mục thực thi của ứng dụng
                         File.WriteAllBytes(fileName, fileBytes);
 
-                        Invoke(new Action(() => {
-                            // Thay vì: rtbMessages.Items.Add("📥 Đã nhận file: " + fileName);
-                            rtbMessages.AppendText("📥 Đã nhận file: " + fileName + Environment.NewLine);
+                        Invoke(new Action(() => {;
+                            txtChatHistory.AppendText("📥 Đã nhận file: " + fileName + Environment.NewLine);
                         }));
                     }
                 }
@@ -211,7 +215,7 @@ namespace ClientApp
                 if (client != null && client.Connected)
                 {
                     Invoke(new Action(() => {
-                        rtbMessages.AppendText("⚠️ Đã xảy ra lỗi khi nhận dữ liệu." + Environment.NewLine);
+                        txtChatHistory.AppendText("⚠️ Đã xảy ra lỗi khi nhận dữ liệu." + Environment.NewLine);
                     }));
                 }
             }

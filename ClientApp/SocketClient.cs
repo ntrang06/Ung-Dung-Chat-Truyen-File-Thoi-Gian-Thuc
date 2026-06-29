@@ -39,8 +39,7 @@ namespace ClientApp
                 _stream.Write(connectData, 0, connectData.Length);
                 _stream.Flush();
 
-                // Kích hoạt luồng ngầm liên tục ngồi đợi "nhặt" dữ liệu từ Server gửi về
-                Task.Run(() => ListenToServer());
+                
 
                 return true;
             }
@@ -55,41 +54,40 @@ namespace ClientApp
         // Luồng chạy ngầm đọc dữ liệu xuyên suốt ứng dụng
         private void ListenToServer()
         {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[8192];
 
             try
             {
                 while (_isConnected && _socket != null && _socket.Connected)
                 {
                     int bytesRead = _stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0) // Server chủ động ngắt kết nối
+                    if (bytesRead == 0)
                     {
                         HandleDisconnect();
                         break;
                     }
 
                     string receivedText = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    // Debug xem Server thực sự gửi gì
+                    System.Diagnostics.Debug.WriteLine("Server gửi: " + receivedText);
 
-                    // 1. XỬ LÝ LỆNH CẢNH BÁO GIÁM SÁT (BUZZ)
                     if (receivedText.StartsWith("BUZZ|"))
                     {
                         string alertContent = receivedText.Substring(5);
 
-                        // Kích hoạt sự kiện toàn hệ thống, hoặc hiển thị MessageBox luôn tại đây cho an toàn
                         if (Application.OpenForms.Count > 0)
                         {
                             Application.OpenForms[0].Invoke(new MethodInvoker(() =>
                             {
-                                MessageBox.Show(alertContent, "CẢNH BÁO TỪ HỆ THỐNG GIÁM SÁT", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(alertContent,
+                                    "CẢNH BÁO TỪ HỆ THỐNG",
+                                    MessageBoxButtons.OK,
+                                    MessageBoxIcon.Warning);
                             }));
                         }
 
-                        // Bắn sự kiện ra ngoài nếu các Form con khác muốn bắt thêm logic
                         OnBuzzReceived?.Invoke(alertContent);
-                        continue;
                     }
-
-                    // Bạn có thể xử lý thêm các gói tin Chat, File... ở các điều kiện else if tiếp theo tại đây
                 }
             }
             catch
@@ -135,16 +133,18 @@ namespace ClientApp
         {
             try
             {
-                if (_socket != null && _socket.Connected && _stream != null)
-                {
-                    byte[] data = Encoding.UTF8.GetBytes(text);
-                    _stream.Write(data, 0, data.Length);
-                    _stream.Flush();
-                }
+                if (_socket == null || !_socket.Connected || _stream == null)
+                    return;
+
+                byte[] data = Encoding.UTF8.GetBytes(text);
+
+                _stream.Write(data, 0, data.Length);
+                _stream.Flush();
+                MessageBox.Show("Đã gửi: " + text);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Lỗi gửi dữ liệu: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
 

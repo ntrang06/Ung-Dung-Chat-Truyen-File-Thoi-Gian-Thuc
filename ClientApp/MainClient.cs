@@ -32,20 +32,22 @@ namespace ClientApp
         // ================= Chat =================
         private void btnChat_Click(object sender, EventArgs e)
         {
+            // BẮT BUỘC: Truyền 'this' (chính MainClient) vào để form chat có thể điều khiển quay lại
             lstChat chat = new lstChat(this);
 
-            this.Hide(); // <-- THÊM ĐÚNG DÒNG NÀY: Ẩn Menu chính đi ngay khi bấm nút
-            chat.ShowDialog();
+            this.Hide();
+            chat.ShowDialog(); // Chạy Form chat dưới dạng Dialog chặn
+            this.Show();       // Tự động hiển thị lại Menu chính ngay khi tắt Form chat
         }
 
         // ================= Truyền File =================
         private void btnFile_Click(object sender, EventArgs e)
         {
             ClientFileForm file = new ClientFileForm();
-            file.ShowDialog();
+
             this.Hide();
             file.ShowDialog();
-            this.Show();
+            this.Show(); // Hiển thị lại Menu chính khi tắt Form truyền file
         }
 
         // ================= Thoát =================
@@ -68,15 +70,6 @@ namespace ClientApp
         {
             SocketClient.Instance.Disconnect();
             Application.Exit();
-        }
-
-        private void btnChat_Click_1(object sender, EventArgs e)
-        {
-            lstChat chat = new lstChat();
-
-            this.Hide();
-            chat.ShowDialog();
-            this.Show();
         }
     }
 }

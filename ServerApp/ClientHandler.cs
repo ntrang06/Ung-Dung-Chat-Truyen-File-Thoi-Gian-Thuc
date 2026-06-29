@@ -65,9 +65,15 @@ namespace ServerApp
                 int read = _stream.Read(messageBuffer, totalRead, messageLength - totalRead);
                 totalRead += read;
             }
-
             string message = Encoding.UTF8.GetString(messageBuffer);
-            _server.InvokeMessageReceived($"[Client {_endPoint}]: {message}");
+
+            string fullMessage = $"[Client {_endPoint}]: {message}";
+
+            // Hiển thị lên Server
+            _server.InvokeMessageReceived(fullMessage);
+
+            // Gửi lại cho tất cả Client
+            _server.BroadcastMessage(fullMessage);
         }
 
         private void HandleReceiveFile()

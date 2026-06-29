@@ -49,40 +49,41 @@
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(724, 378);
+            this.panel1.Size = new System.Drawing.Size(814, 472);
             this.panel1.TabIndex = 0;
             // 
             // btnSend
             // 
             this.btnSend.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.btnSend.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSend.Location = new System.Drawing.Point(617, 331);
+            this.btnSend.Location = new System.Drawing.Point(694, 414);
             this.btnSend.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnSend.Name = "btnSend";
-            this.btnSend.Size = new System.Drawing.Size(92, 29);
+            this.btnSend.Size = new System.Drawing.Size(104, 36);
             this.btnSend.TabIndex = 9;
             this.btnSend.Text = "Gửi ";
             this.btnSend.UseVisualStyleBackColor = false;
+            this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
             // 
             // txtInput
             // 
-            this.txtInput.Location = new System.Drawing.Point(11, 331);
+            this.txtInput.Location = new System.Drawing.Point(12, 414);
             this.txtInput.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txtInput.Multiline = true;
             this.txtInput.Name = "txtInput";
-            this.txtInput.Size = new System.Drawing.Size(583, 30);
+            this.txtInput.Size = new System.Drawing.Size(655, 36);
             this.txtInput.TabIndex = 8;
             // 
             // txtChatHistory
             // 
             this.txtChatHistory.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.txtChatHistory.Location = new System.Drawing.Point(11, 66);
+            this.txtChatHistory.Location = new System.Drawing.Point(12, 82);
             this.txtChatHistory.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txtChatHistory.Multiline = true;
             this.txtChatHistory.Name = "txtChatHistory";
             this.txtChatHistory.ReadOnly = true;
             this.txtChatHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtChatHistory.Size = new System.Drawing.Size(699, 242);
+            this.txtChatHistory.Size = new System.Drawing.Size(786, 302);
             this.txtChatHistory.TabIndex = 7;
             // 
             // btnBackToMenu
@@ -90,10 +91,10 @@
             this.btnBackToMenu.BackColor = System.Drawing.SystemColors.Info;
             this.btnBackToMenu.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBackToMenu.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btnBackToMenu.Location = new System.Drawing.Point(11, 10);
+            this.btnBackToMenu.Location = new System.Drawing.Point(12, 12);
             this.btnBackToMenu.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnBackToMenu.Name = "btnBackToMenu";
-            this.btnBackToMenu.Size = new System.Drawing.Size(97, 42);
+            this.btnBackToMenu.Size = new System.Drawing.Size(109, 52);
             this.btnBackToMenu.TabIndex = 6;
             this.btnBackToMenu.Text = "Quay lại";
             this.btnBackToMenu.UseVisualStyleBackColor = false;
@@ -104,18 +105,18 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Gill Sans Ultra Bold", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.label1.Location = new System.Drawing.Point(179, 20);
+            this.label1.Location = new System.Drawing.Point(201, 25);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(410, 26);
+            this.label1.Size = new System.Drawing.Size(477, 31);
             this.label1.TabIndex = 0;
             this.label1.Text = "KHUNG CHAT HỆ THỐNG (SERVER)";
             this.label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // ChatServer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(724, 378);
+            this.ClientSize = new System.Drawing.Size(814, 472);
             this.Controls.Add(this.panel1);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "ChatServer";

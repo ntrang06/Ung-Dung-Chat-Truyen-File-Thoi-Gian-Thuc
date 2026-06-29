@@ -146,12 +146,21 @@ namespace ServerApp
         // --- NÚT GỬI CẢNH BÁO ĐỒNG LOẠT CHO TẤT CẢ CLIENT ---
         private void btnBuzz_Click(object sender, EventArgs e)
         {
-            byte[] data = Encoding.UTF8.GetBytes("BUZZ|Hành vi của bạn đang bị giám sát!");
+            string buzzMsg = "Hành vi của bạn đang bị giám sát!";
+
+            // Đóng gói mảng byte theo đúng cấu trúc giao thức: [Header] + [Length] + [Content]
+            byte[] msgBytes = Encoding.UTF8.GetBytes(buzzMsg);
+            byte[] lengthBytes = BitConverter.GetBytes(msgBytes.Length);
+
+            byte[] data = new byte[1 + 4 + msgBytes.Length];
+            data[0] = 0x01; // Sử dụng cờ hiệu 0x01 để Client nhận diện hiển thị Text dạng tin nhắn
+            Array.Copy(lengthBytes, 0, data, 1, 4);
+            Array.Copy(msgBytes, 0, data, 5, msgBytes.Length);
+
             int count = 0;
 
             lock (SocketServer.Instance.ConnectedClients)
             {
-                // Duyệt qua TẤT CẢ các Client đang online để phát cảnh báo đồng loạt
                 foreach (var client in SocketServer.Instance.ConnectedClients)
                 {
                     if (client.Socket != null && client.Socket.Connected)
@@ -160,23 +169,21 @@ namespace ServerApp
                         {
                             NetworkStream stream = client.Socket.GetStream();
                             stream.Write(data, 0, data.Length);
-                            stream.Flush(); // Ép luồng mạng đẩy gói tin đi ngay lập tức không đợi bộ đệm
+                            stream.Flush();
                             count++;
                         }
-                        catch
-                        {
-                           
-                        }
+                        catch { }
                     }
                 }
             }
+
             if (count > 0)
             {
-                MessageBox.Show($"Đã phát lệnh cảnh báo thành công tới toàn bộ {count} máy con đang online!", "Thành công");
+                MessageBox.Show($"Đã phát lệnh cảnh báo thành công tới toàn bộ {count} máy con!", "Thành công");
             }
             else
             {
-                MessageBox.Show("Không có máy Client nào đang kết nối để nhận cảnh báo!", "Thông báo");
+                MessageBox.Show("Không có máy Client nào đang kết nối!", "Thông báo");
             }
         }
 

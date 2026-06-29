@@ -33,9 +33,9 @@
             this.btnSendFile = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.txtMessage = new System.Windows.Forms.TextBox();
-            this.rtbMessages = new System.Windows.Forms.RichTextBox();
             this.btnBackToMenu = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.txtChatHistory = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -51,6 +51,7 @@
             this.btnSend.TabIndex = 9;
             this.btnSend.Text = "Gửi";
             this.btnSend.UseVisualStyleBackColor = false;
+            this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
             // 
             // btnSendFile
             // 
@@ -88,23 +89,13 @@
             this.txtMessage.TabIndex = 6;
             this.txtMessage.TextChanged += new System.EventHandler(this.txtMessage_TextChanged);
             // 
-            // rtbMessages
-            // 
-            this.rtbMessages.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rtbMessages.Location = new System.Drawing.Point(23, 101);
-            this.rtbMessages.Name = "rtbMessages";
-            this.rtbMessages.ReadOnly = true;
-            this.rtbMessages.Size = new System.Drawing.Size(622, 229);
-            this.rtbMessages.TabIndex = 11;
-            this.rtbMessages.Text = "";
-            // 
             // btnBackToMenu
             // 
             this.btnBackToMenu.BackColor = System.Drawing.SystemColors.Info;
             this.btnBackToMenu.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBackToMenu.ForeColor = System.Drawing.SystemColors.ActiveCaption;
             this.btnBackToMenu.Location = new System.Drawing.Point(11, 11);
-            this.btnBackToMenu.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnBackToMenu.Margin = new System.Windows.Forms.Padding(2);
             this.btnBackToMenu.Name = "btnBackToMenu";
             this.btnBackToMenu.Size = new System.Drawing.Size(118, 40);
             this.btnBackToMenu.TabIndex = 13;
@@ -115,7 +106,7 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.SystemColors.Info;
-            this.panel1.Controls.Add(this.rtbMessages);
+            this.panel1.Controls.Add(this.txtChatHistory);
             this.panel1.Controls.Add(this.btnBackToMenu);
             this.panel1.Controls.Add(this.txtMessage);
             this.panel1.Controls.Add(this.label4);
@@ -126,6 +117,17 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(673, 453);
             this.panel1.TabIndex = 14;
+            // 
+            // txtChatHistory
+            // 
+            this.txtChatHistory.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.txtChatHistory.Location = new System.Drawing.Point(11, 82);
+            this.txtChatHistory.Multiline = true;
+            this.txtChatHistory.Name = "txtChatHistory";
+            this.txtChatHistory.ReadOnly = true;
+            this.txtChatHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtChatHistory.Size = new System.Drawing.Size(649, 255);
+            this.txtChatHistory.TabIndex = 14;
             // 
             // lstChat
             // 
@@ -150,8 +152,8 @@
         private System.Windows.Forms.Button btnSendFile;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtMessage;
-        private System.Windows.Forms.RichTextBox rtbMessages;
         private System.Windows.Forms.Button btnBackToMenu;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.TextBox txtChatHistory;
     }
 }

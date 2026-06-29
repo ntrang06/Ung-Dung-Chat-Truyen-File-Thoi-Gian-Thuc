@@ -53,15 +53,24 @@ namespace ServerApp
         {
             if (string.IsNullOrWhiteSpace(txtInput.Text)) return;
 
-            string msgToSend = txtInput.Text;
+            string time = DateTime.Now.ToString("HH:mm:ss");
 
-            // Định dạng gói tin chat theo chuẩn: CHAT|Nội dung
-            byte[] data = Encoding.UTF8.GetBytes("CHAT|" + msgToSend);
+            string msgToSend =
+                $"[{time}] [Server]:{Environment.NewLine}{txtInput.Text}";
+
+            // ĐÃ SỬA: Đóng gói gói tin chuẩn Byte Header (0x01) giống cấu trúc Client mong đợi
+            byte[] msgBytes = Encoding.UTF8.GetBytes(msgToSend);
+            byte[] lengthBytes = BitConverter.GetBytes(msgBytes.Length);
+
+            byte[] data = new byte[1 + 4 + msgBytes.Length];
+            data[0] = 0x01; // Cờ hiệu nhận diện TIN NHẮN TEXT
+            Array.Copy(lengthBytes, 0, data, 1, 4);
+            Array.Copy(msgBytes, 0, data, 5, msgBytes.Length);
 
             // RESET lại biến đếm số máy gửi thành công trước khi chạy vòng lặp
             successfullySent = 0;
 
-            // Duyệt qua tất cả các Client đang online để gửi tin nhắn của Server tới toàn bộ các máy
+            // Duyệt qua tất cả các Client đang online để gửi dữ liệu mảng byte vừa đóng gói
             lock (SocketServer.Instance.ConnectedClients)
             {
                 foreach (var client in SocketServer.Instance.ConnectedClients)
@@ -72,6 +81,7 @@ namespace ServerApp
                         {
                             NetworkStream stream = client.Socket.GetStream();
                             stream.Write(data, 0, data.Length);
+                            stream.Flush();
                             successfullySent++; // Tăng số lượng máy gửi thành công
                         }
                         catch { }
@@ -79,14 +89,14 @@ namespace ServerApp
                 }
             }
 
-            // THAY ĐỔI LOGIC KIỂM TRA: Dựa vào biến đếm successfullySent thay vì splitSend
             if (successfullySent > 0)
             {
                 // Hiển thị tin nhắn chính mình vừa gửi lên Khung lịch sử chat
-                txtChatHistory.AppendText($"[Server]: {msgToSend}" + Environment.NewLine);
+                //string time = DateTime.Now.ToString("HH:mm:ss");
 
-                // ĐÃ SỬA: Xóa trống ô NHẬP TIN NHẮN (txtInput) để gõ câu tiếp theo, chứ không xóa lịch sử (txtChatHistory)
-                txtInput.Clear();
+                txtChatHistory.AppendText(
+                    $"[{time}] [Server]:{Environment.NewLine}{msgToSend}{Environment.NewLine}{Environment.NewLine}");
+                txtInput.Clear(); 
                 txtInput.Focus();
             }
             else
