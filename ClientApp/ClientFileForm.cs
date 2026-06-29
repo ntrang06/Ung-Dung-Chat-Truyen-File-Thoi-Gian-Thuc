@@ -18,10 +18,11 @@ namespace ClientApp
         {
             InitializeComponent();
         }
-
+        private MainClient _mainMenu;
         private void ClientFileForm_Load(object sender, EventArgs e)
         {
             SocketClient.Instance.OnCommandReceived += HandleCommand;
+
             txtPath.ReadOnly = true;
 
             lvFile.Columns.Clear();
@@ -33,7 +34,25 @@ namespace ClientApp
             progressBar1.Maximum = 100;
             progressBar1.Value = 0;
         }
+        private void HandleFileReceived(string fileName)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string>(HandleFileReceived), fileName);
+                return;
+            }
 
+            MessageBox.Show("Đã nhận file:\n" + fileName);
+
+            progressBar1.Value = 100;
+        }
+       
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            lvFile.Items.Clear();
+
+            SocketClient.Instance.SendData("REQ_FILES|" + txtPath.Text);
+        }
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
@@ -177,7 +196,14 @@ namespace ClientApp
                 stream.Flush();
             }
         }
-
+        private void btnBackToMenu_Click(object sender, EventArgs e)
+        {
+            if (_mainMenu != null)
+            {
+                _mainMenu.Show();
+            }
+            this.Close();
+        }
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
 

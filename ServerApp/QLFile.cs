@@ -11,7 +11,7 @@ namespace ServerApp
         private Form _mainMenu;
 
         // Đường dẫn thư mục lưu trữ mặc định trên máy Server (khi tải file từ Client về)
-        private string _serverDownloadPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        private string _serverDownloadPath = Path.Combine(Application.StartupPath, "ServerFiles");
 
         // Hàm khởi tạo nhận MainForm truyền vào từ Menu chính
         public QLFile(Form mainMenu)
@@ -25,16 +25,15 @@ namespace ServerApp
             // Đặt vị trí Form hiển thị ngay giữa màn hình
             this.StartPosition = FormStartPosition.CenterScreen;
 
-            // Đặt đường dẫn ổ đĩa mặc định hiển thị trên thanh tìm kiếm
-            txtCurrentPath.Text = @"C:\";
+            txtCurrentPath.Text = _serverDownloadPath;
 
-            // Cấu hình ListView chọn nguyên dòng trực quan
             lvFiles.View = View.Details;
             lvFiles.FullRowSelect = true;
-            SocketServer.Instance.OnFilesReceived += PopulateListView;
-
-            // Tự động phát lệnh yêu cầu Client quét thư mục gốc C:\ ngay khi vừa mở giao diện
-            RequestClientFiles(txtCurrentPath.Text);
+            if (!Directory.Exists(_serverDownloadPath))
+            {
+                Directory.CreateDirectory(_serverDownloadPath);
+            }
+            LoadServerFiles();
         }
         private void RequestClientFiles(string targetPath)
         {
@@ -99,6 +98,10 @@ namespace ServerApp
                     _serverDownloadPath = fbd.SelectedPath;
                     txtCurrentPath.Text = _serverDownloadPath;
 
+                    LoadServerFiles();
+
+                    MessageBox.Show("Đã thay đổi nơi lưu.");
+
                     MessageBox.Show($"Đã thay đổi nơi lưu trữ tải về thành công!\nThư mục hiện tại: {_serverDownloadPath}",
                                     "Cấu hình Server",
                                     MessageBoxButtons.OK,
@@ -153,47 +156,30 @@ namespace ServerApp
         {
             if (lvFiles.SelectedItems.Count == 0)
             {
-                MessageBox.Show("Vui lòng chọn một file trong danh sách để tải về máy!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn file.");
                 return;
             }
 
-            ListViewItem selectedItem = lvFiles.SelectedItems[0];
-            if (selectedItem.SubItems[2].Text == "Thư mục")
+            string fileName = lvFiles.SelectedItems[0].Text;
+
+
+            string sourceFile = Path.Combine(_serverDownloadPath, fileName);
+
+            if (!File.Exists(sourceFile))
             {
-                MessageBox.Show("Hệ thống chỉ hỗ trợ tải file đơn lẻ, không hỗ trợ tải nguyên thư mục!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Không tìm thấy file trên Server.");
                 return;
             }
 
-            string fileName = selectedItem.Text;
-            string fullPathOnClient = txtCurrentPath.Text;
-            if (!fullPathOnClient.EndsWith(@"\")) fullPathOnClient += @"\";
-            fullPathOnClient += fileName;
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.FileName = fileName;
+            sfd.Filter = "Tất cả file|*.*";
 
-            // Cấu trúc gói lệnh yêu cầu tải: DOWNLOAD|Đường_Dẫn_Đầy_Đủ_Của_File_Trên_Client
-            byte[] downloadCmd = Encoding.UTF8.GetBytes("DOWNLOAD|" + fullPathOnClient);
-
-            bool sent = false;
-            lock (SocketServer.Instance.ConnectedClients)
+            if (sfd.ShowDialog() == DialogResult.OK)
             {
-                foreach (var client in SocketServer.Instance.ConnectedClients)
-                {
-                    if (client.Socket != null && client.Socket.Connected)
-                    {
-                        try
-                        {
-                            NetworkStream stream = client.Socket.GetStream();
-                            stream.Write(downloadCmd, 0, downloadCmd.Length);
-                            sent = true;
-                            break;
-                        }
-                        catch { }
-                    }
-                }
-            }
+                File.Copy(sourceFile, sfd.FileName, true);
 
-            if (sent)
-            {
-                MessageBox.Show($"Đã gửi lệnh yêu cầu tải file [{fileName}] tới máy con.\nFile tải về sẽ được lưu xuống máy Server tại: {_serverDownloadPath}", "Đang tiến hành tải");
+                MessageBox.Show("Tải file hoàn tất!");
             }
         }
 
@@ -202,54 +188,48 @@ namespace ServerApp
         {
             if (lvFiles.SelectedItems.Count == 0)
             {
-                MessageBox.Show("Vui lòng chọn một file hoặc thư mục để xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn file.");
                 return;
             }
 
-            string targetName = lvFiles.SelectedItems[0].Text;
-            string fullPathToDelete = txtCurrentPath.Text;
-            if (!fullPathToDelete.EndsWith(@"\")) fullPathToDelete += @"\";
-            fullPathToDelete += targetName;
+            string fileName = lvFiles.SelectedItems[0].Text;
 
-            // Hiện hộp thoại xác nhận trước khi xóa tránh nhầm lẫn
-            DialogResult result = MessageBox.Show($"Bạn có chắc chắn muốn xóa vĩnh viễn [{targetName}] trên máy Client không?",
-                                                  "Xác nhận xóa",
-                                                  MessageBoxButtons.YesNo,
-                                                  MessageBoxIcon.Question);
-            if (result == DialogResult.Yes)
+            string filePath = Path.Combine(_serverDownloadPath, fileName);
+
+            if (!File.Exists(filePath))
             {
-                // Cấu trúc gói lệnh yêu cầu xóa: DELETE_FILE|Đường_Dẫn_Đầy_Đủ
-                byte[] deleteCmd = Encoding.UTF8.GetBytes("DELETE_FILE|" + fullPathToDelete + "\n");
+                MessageBox.Show("Không tìm thấy file.");
+                return;
+            }
 
-                lock (SocketServer.Instance.ConnectedClients)
-                {
-                    foreach (var client in SocketServer.Instance.ConnectedClients)
-                    {
-                        if (client.Socket != null && client.Socket.Connected)
-                        {
-                            try
-                            {
-                                // ĐÃ SỬA: Thêm .Socket vào dòng này
-                                NetworkStream stream = client.Socket.GetStream();
-                                stream.Write(deleteCmd, 0, deleteCmd.Length);
-                                MessageBox.Show($"Đã phát lệnh yêu cầu xóa [{targetName}] tới máy con thành công");
+            File.Delete(filePath);
 
-                                // Tự động kích hoạt quét lại thư mục hiện tại sau khi xóa để cập nhật UI
-                                RequestClientFiles(txtCurrentPath.Text);
-                                break;
-                            }
-                            catch { }
-                        }
-                    }
-                }
+            LoadServerFiles();
+
+            MessageBox.Show("Đã xóa file.");
+        }
+        private void LoadServerFiles()
+        {
+            lvFiles.Items.Clear();
+
+            DirectoryInfo dir = new DirectoryInfo(_serverDownloadPath);
+
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                ListViewItem item = new ListViewItem(file.Name);
+
+                item.SubItems.Add((file.Length / 1024) + " KB");
+
+                item.SubItems.Add(file.Extension);
+
+                lvFiles.Items.Add(item);
             }
         }
 
         // --- NÚT LÀM MỚI DANH SÁCH FILE ---
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            // TODO: Gửi lệnh yêu cầu Client quét lại thư mục hiện tại để đồng bộ danh sách mới nhất
-            MessageBox.Show("Đang cập nhật làm mới danh sách thư mục từ Client...", "Đồng bộ");
+            LoadServerFiles();
         }
 
         // --- NÚT QUAY LẠI MENU CHÍNH ---

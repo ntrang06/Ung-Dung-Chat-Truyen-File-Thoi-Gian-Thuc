@@ -231,9 +231,11 @@ namespace ServerApp
 
                         long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
 
-                        string savePath = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                            fileName);
+                        string folder = Path.Combine(Application.StartupPath, "ServerFiles");
+
+                        if (!Directory.Exists(folder))
+                            Directory.CreateDirectory(folder);
+                        string savePath = Path.Combine(folder, fileName);
                         MessageBox.Show(savePath);
 
                         using (FileStream fs = new FileStream(savePath, FileMode.Create))
@@ -274,8 +276,7 @@ namespace ServerApp
                 ConnectedClients.Remove(clientInfo);
                 OnClientDisconnected?.Invoke(clientInfo.Socket.Client.RemoteEndPoint.ToString());
 
-OnLogReceived?.Invoke(
-    $"Client {clientInfo.Socket.Client.RemoteEndPoint} đã ngắt kết nối.");
+                OnLogReceived?.Invoke($"Client {clientInfo.Socket.Client.RemoteEndPoint} đã ngắt kết nối.");
             }
 
             OnClientListChanged?.Invoke();
@@ -355,6 +356,24 @@ OnLogReceived?.Invoke(
             {
 
             }
+
+        }
+        public void SendCommand(ClientInfo client, string command)
+        {
+            try
+            {
+                NetworkStream stream = client.Socket.GetStream();
+
+                byte[] data = Encoding.UTF8.GetBytes(command + "\n");
+
+                stream.Write(data, 0, data.Length);
+                stream.Flush();
+            }
+            catch
+            {
+            }
         }
     }
 }
+
+

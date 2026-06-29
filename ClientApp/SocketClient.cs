@@ -224,5 +224,9 @@ namespace ClientApp
         {
             return _stream;
         }
+        public void RaiseCommand(string command)
+        {
+            OnCommandReceived?.Invoke(command);
+        }
     }
 }
