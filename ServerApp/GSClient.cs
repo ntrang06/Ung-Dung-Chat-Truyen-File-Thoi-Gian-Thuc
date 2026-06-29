@@ -153,7 +153,7 @@ namespace ServerApp
             byte[] lengthBytes = BitConverter.GetBytes(msgBytes.Length);
 
             byte[] data = new byte[1 + 4 + msgBytes.Length];
-            data[0] = 0x01; // Sử dụng cờ hiệu 0x01 để Client nhận diện hiển thị Text dạng tin nhắn
+            data[0] = 0x03; 
             Array.Copy(lengthBytes, 0, data, 1, 4);
             Array.Copy(msgBytes, 0, data, 5, msgBytes.Length);
 

@@ -111,15 +111,24 @@ namespace ServerApp
         }
         private void AppendChatMessage(string message)
         {
-            // Tránh lỗi xung đột luồng giao diện (Cross-thread)
+            if (IsDisposed || !IsHandleCreated)
+                return;
+
+            if (txtChatHistory.IsDisposed)
+                return;
+
             if (txtChatHistory.InvokeRequired)
             {
-                txtChatHistory.Invoke(new Action<string>(AppendChatMessage), message);
-                return;
+                txtChatHistory.BeginInvoke(new Action(() =>
+                {
+                    if (!txtChatHistory.IsDisposed)
+                        txtChatHistory.AppendText(message + Environment.NewLine);
+                }));
             }
-
-            // Thêm tin nhắn mới vào khung hiển thị nội dung chat và xuống dòng
-            txtChatHistory.AppendText(message + Environment.NewLine);
+            else
+            {
+                txtChatHistory.AppendText(message + Environment.NewLine);
+            }
         }
 
         // Hàm hỗ trợ hiển thị tin nhắn từ các luồng khác nhau

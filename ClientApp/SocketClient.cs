@@ -107,6 +107,37 @@ namespace ClientApp
 
                         OnFileReceived?.Invoke(fileName);
                     }
+                    else if (header == 0x03)
+                    {
+                        byte[] len = new byte[4];
+                        ReadFull(len, 4);
+
+                        int msgLen = BitConverter.ToInt32(len, 0);
+
+                        byte[] data = new byte[msgLen];
+                        ReadFull(data, msgLen);
+
+                        string msg = Encoding.UTF8.GetString(data);
+
+                        OnBuzzReceived?.Invoke(msg);
+
+                        if (Application.OpenForms.Count > 0)
+                        {
+                            Form frm = Application.OpenForms[0];
+
+                            if (frm.IsHandleCreated)
+                            {
+                                frm.BeginInvoke(new MethodInvoker(() =>
+                                {
+                                    MessageBox.Show(
+                                        msg,
+                                        "CẢNH BÁO TỪ SERVER",
+                                        MessageBoxButtons.OK,
+                                        MessageBoxIcon.Warning);
+                                }));
+                            }
+                        }
+                    }
                 }
             }
             catch
