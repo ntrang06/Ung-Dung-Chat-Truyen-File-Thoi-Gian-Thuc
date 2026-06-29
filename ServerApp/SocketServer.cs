@@ -99,16 +99,22 @@ namespace ServerApp
                 {
                     TcpClient client = _listener.AcceptTcpClient();
 
-                    // ĐỌC GÓI TIN ĐỊNH DANH ĐẦU TIÊN ĐỂ LẤY USERNAME
                     NetworkStream stream = client.GetStream();
                     byte[] buffer = new byte[1024];
+
+                    // ĐÃ SỬA: Thêm vòng lặp kiểm tra DataAvailable để đợi gói tin vật lý truyền từ card mạng về hoàn tất
+                    while (!stream.DataAvailable && _isRunning)
+                    {
+                        Thread.Sleep(10); // Nghỉ 10ms để nhường CPU, đợi dữ liệu từ mạng đổ về bộ đệm
+                    }
+
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);
                     string firstMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                    string clientName = "Ẩn danh"; // Tên mặc định nếu lỗi chuỗi
+                    string clientName = "Ẩn danh";
                     if (firstMessage.StartsWith("CONNECT|"))
                     {
-                        clientName = firstMessage.Split('|')[1]; // Cắt lấy tên người dùng đằng sau dấu |
+                        clientName = firstMessage.Split('|')[1];
                     }
 
                     // Tạo thực thể ClientInfo mới
@@ -116,14 +122,13 @@ namespace ServerApp
 
                     lock (ConnectedClients)
                     {
-                        // ĐÃ SỬA DÒNG 99: Nạp thực thể ClientInfo vào danh sách (Thay vì biến client thô)
                         ConnectedClients.Add(clientInfo);
                     }
 
                     // Kích hoạt sự kiện cập nhật danh sách lên giao diện
                     OnClientListChanged?.Invoke();
 
-                    // Tạo luồng đọc dữ liệu riêng cho từng Client (Truyền clientInfo vào xử lý tiếp)
+                    // Tạo luồng đọc dữ liệu riêng cho từng Client
                     Thread clientThread = new Thread(() => HandleClientComm(clientInfo));
                     clientThread.IsBackground = true;
                     clientThread.Start();

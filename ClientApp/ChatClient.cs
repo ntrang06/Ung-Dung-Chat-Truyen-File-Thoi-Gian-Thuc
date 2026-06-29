@@ -26,6 +26,10 @@ namespace ClientApp
             InitializeComponent(); // Nạp đầy đủ các nút bấm, RichTextBox lên giao diện
         }
 
+        public lstChat()
+        {
+        }
+
         // 2. Lấy kết nối từ SocketClient.Instance khi Form bắt đầu tải lên
         private void lstChat_Load(object sender, EventArgs e)
         {
