@@ -21,6 +21,7 @@ namespace ClientApp
 
         private void ClientFileForm_Load(object sender, EventArgs e)
         {
+            SocketClient.Instance.OnCommandReceived += HandleCommand;
             txtPath.ReadOnly = true;
 
             lvFile.Columns.Clear();
@@ -94,6 +95,86 @@ namespace ClientApp
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
+            }
+        }
+        private void HandleCommand(string cmd)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string>(HandleCommand), cmd);
+                return;
+            }
+
+            if (cmd.StartsWith("DELETE_FILE|"))
+            {
+                string path = cmd.Substring("DELETE_FILE|".Length).Trim();
+
+                try
+                {
+                    if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                        MessageBox.Show("Đã xóa file:\n" + path);
+                    }
+                    else if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, true);
+                        MessageBox.Show("Đã xóa thư mục:\n" + path);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+
+            else if (cmd.StartsWith("REQ_FILES|"))
+            {
+                string path = cmd.Substring("REQ_FILES|".Length).Trim();
+
+                if (!Directory.Exists(path))
+                    return;
+
+                StringBuilder sb = new StringBuilder();
+
+                DirectoryInfo dir = new DirectoryInfo(path);
+
+                foreach (DirectoryInfo d in dir.GetDirectories())
+                {
+                    sb.Append($"{d.Name}*<DIR>*Thư mục|");
+                }
+
+                foreach (FileInfo f in dir.GetFiles())
+                {
+                    sb.Append($"{f.Name}*{f.Length / 1024} KB*{f.Extension}|");
+                }
+
+                SocketClient.Instance.SendData(sb.ToString());
+            }
+
+            else if (cmd.StartsWith("DOWNLOAD|"))
+            {
+                string path = cmd.Substring("DOWNLOAD|".Length).Trim();
+
+                if (!File.Exists(path))
+                    return;
+
+                NetworkStream stream = SocketClient.Instance.GetStream();
+
+                byte[] file = File.ReadAllBytes(path);
+
+                stream.WriteByte(0x02);
+
+                byte[] name = Encoding.UTF8.GetBytes(Path.GetFileName(path));
+
+                stream.Write(BitConverter.GetBytes(name.Length), 0, 4);
+                stream.Write(name, 0, name.Length);
+
+                stream.Write(BitConverter.GetBytes((long)file.Length), 0, 8);
+
+                stream.Write(file, 0, file.Length);
+
+                stream.Flush();
             }
         }
 

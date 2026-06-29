@@ -83,6 +83,7 @@ namespace ServerApp
 
                 // Kích hoạt sự kiện để UI biết danh sách đã về 0
                 OnClientListChanged?.Invoke();
+                
             }
             catch (Exception ex)
             {
@@ -111,19 +112,18 @@ namespace ServerApp
                             // Tránh việc Client kết nối ảo làm treo luồng của Server
                             client.ReceiveTimeout = 5000;
 
-                            byte[] buffer = new byte[1024];
-                            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                            string firstMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                            StreamReader reader = new StreamReader(stream, Encoding.UTF8, false, 1024, true);
 
-                            MessageBox.Show(firstMessage);
-                            if (bytesRead == 0) return;
+                            string firstMessage = reader.ReadLine();
 
-                            //string firstMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                            if (string.IsNullOrEmpty(firstMessage))
+                                return;
+
                             string clientName = "Ẩn danh";
 
                             if (firstMessage.StartsWith("CONNECT|"))
                             {
-                                clientName = firstMessage.Split('|')[1];
+                                clientName = firstMessage.Substring(8);
                             }
 
                             // Khôi phục lại trạng thái chờ vô hạn cho các gói tin Chat/File sau đó
@@ -137,7 +137,9 @@ namespace ServerApp
                                 ConnectedClients.Add(clientInfo);
                             }
 
-                            OnClientListChanged?.Invoke();    
+                            OnClientListChanged?.Invoke();
+                            // Bắt đầu xử lý dữ liệu từ client (chat, upload...)
+                            HandleClientComm(clientInfo);
                         }
                         catch (Exception ex)
                         {
@@ -159,10 +161,11 @@ namespace ServerApp
         // Hàm xử lý tương tác riêng biệt với từng máy Client
         private void HandleClientComm(ClientInfo clientInfo)
         {
+            MessageBox.Show("HandleClientComm chạy"); 
             TcpClient client = clientInfo.Socket;
             NetworkStream stream = client.GetStream();
 
-            while (_isRunning && client.Connected)
+            while (_isRunning && client.Connected) 
             {
                 try
                 {
@@ -249,7 +252,7 @@ namespace ServerApp
                         }
 
                         OnFilesReceived?.Invoke(
-                            $"Đã nhận file: {fileName}");
+                            $"{fileName}*{fileSize / 1024} KB*{Path.GetExtension(fileName)}");
                     }
                 }
                 catch (Exception ex)

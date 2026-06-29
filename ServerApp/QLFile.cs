@@ -60,6 +60,7 @@ namespace ServerApp
         }
         private void PopulateListView(string fileData)
         {
+            MessageBox.Show(fileData);
             if (lvFiles.InvokeRequired)
             {
                 lvFiles.Invoke(new Action<string>(PopulateListView), fileData);
@@ -218,7 +219,7 @@ namespace ServerApp
             if (result == DialogResult.Yes)
             {
                 // Cấu trúc gói lệnh yêu cầu xóa: DELETE_FILE|Đường_Dẫn_Đầy_Đủ
-                byte[] deleteCmd = Encoding.UTF8.GetBytes("DELETE_FILE|" + fullPathToDelete);
+                byte[] deleteCmd = Encoding.UTF8.GetBytes("DELETE_FILE|" + fullPathToDelete + "\n");
 
                 lock (SocketServer.Instance.ConnectedClients)
                 {

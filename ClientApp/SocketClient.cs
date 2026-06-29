@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
+
 
 namespace ClientApp
 {
@@ -21,6 +24,7 @@ namespace ClientApp
         // Định nghĩa các sự kiện (Event) để các Giao diện Form đăng ký hứng khi có tin về
         public event Action<string> OnBuzzReceived;
         public event Action OnServerDisconnected;
+        public event Action<string> OnCommandReceived;
 
         private SocketClient() { }
 
@@ -35,11 +39,11 @@ namespace ClientApp
                 _isConnected = true;
 
                 // Gửi gói tin định danh sang Server
-                byte[] connectData = Encoding.UTF8.GetBytes($"CONNECT|{clientName}");
+                byte[] connectData = Encoding.UTF8.GetBytes($"CONNECT|{clientName}\n");
                 _stream.Write(connectData, 0, connectData.Length);
                 _stream.Flush();
 
-                
+
 
                 return true;
             }
@@ -68,6 +72,7 @@ namespace ClientApp
                     }
 
                     string receivedText = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    MessageBox.Show(receivedText);
                     // Debug xem Server thực sự gửi gì
                     System.Diagnostics.Debug.WriteLine("Server gửi: " + receivedText);
 
@@ -87,6 +92,36 @@ namespace ClientApp
                         }
 
                         OnBuzzReceived?.Invoke(alertContent);
+                    }
+                    else if (receivedText.StartsWith("DELETE_FILE|"))
+                    {
+                        OnCommandReceived?.Invoke(receivedText);
+                        string path = receivedText.Substring("DELETE_FILE|".Length);
+
+                        try
+                        {
+                            if (System.IO.File.Exists(path))
+                            {
+                                System.IO.File.Delete(path);
+
+                                MessageBox.Show("Đã xóa file:\n" + path);
+                            }
+                            else if (System.IO.Directory.Exists(path))
+                            {
+                                System.IO.Directory.Delete(path, true);
+
+                                MessageBox.Show("Đã xóa thư mục:\n" + path);
+                            }
+                            else
+                            {
+                                MessageBox.Show("Không tồn tại:\n" + path);
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                        }
                     }
                 }
             }
